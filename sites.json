@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "sites": [
+    {
+      "id": "tetris",
+      "title": "NEON FALL / 2",
+      "description": "",
+      "category": "未分類",
+      "thumbnail": "default-thumbnail.svg",
+      "url": "sites/tetris/index.html",
+      "registeredAt": "2026-10-23T10:11:39.236Z"
+    }
+  ]
+}

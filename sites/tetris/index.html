@@ -1,0 +1,270 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width,initial-scale=1,viewport-fit=cover"
+    />
+    <meta name="theme-color" content="#080b19" />
+    <meta
+      name="description"
+      content="NEON FALL — original neon puzzle. Marathon, Sprint, Ultra and guided practice."
+    />
+    <title>NEON FALL / 2</title>
+    <script type="module" crossorigin src="./assets/index-CAjwf76N.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/index-D8i8gK3K.css">
+  </head>
+  <body>
+    <header>
+      <a class="wordmark" href="#" id="brand"
+        >NEON<span>FALL</span><sup> 02</sup></a
+      >
+      <div class="tag">FIND YOUR FLOW / REBUILT</div>
+    </header>
+    <div id="storageNote" class="storage-note" role="status" hidden>
+      保存が利用できません。記録・設定はこのタブ内のみ保持されます。
+    </div>
+    <main>
+      <section id="home" class="screen">
+        <div class="hero">
+          <div>
+            <div class="eyebrow">A LITTLE CHAOS. PERFECT ORDER.</div>
+            <h1>NEON<br /><span>FALL.</span></h1>
+            <p class="lead">
+              積み重ねる。ひらめく。消し去る。<br />光の中で、自分だけのリズムを。
+            </p>
+            <div class="menu">
+              <button class="primary" data-page="modes">
+                PLAY <small>プレイ →</small></button
+              ><button data-page="practice">
+                PRACTICE <small>技を磨く →</small></button
+              ><button data-page="records">RECORDS <small>記録 ↗</small></button
+              ><button data-page="settings">
+                SETTINGS <small>設定 ↗</small></button
+              ><button data-page="help">
+                HOW TO PLAY <small>遊び方 ↗</small>
+              </button>
+            </div>
+            <p class="reference-note">
+              独自のネオンパズル / Referenceルールは暫定仕様を含みます
+            </p>
+          </div>
+          <div class="art" aria-hidden="true">
+            <div class="tiles" id="artTiles"></div>
+            <div class="artnote">7 SHAPES. INFINITE POSSIBILITIES.</div>
+          </div>
+        </div>
+      </section>
+      <section id="modes" class="screen" hidden>
+        <button class="back quiet" data-page="home">← MAIN MENU</button>
+        <div class="eyebrow">CHOOSE YOUR PACE</div>
+        <h2>PLAY</h2>
+        <div class="cards" id="modeCards"></div>
+      </section>
+      <section id="practice" class="screen" hidden>
+        <button class="back quiet" data-page="home">← MAIN MENU</button>
+        <div class="eyebrow">ONE MOVE CLOSER</div>
+        <h2>PRACTICE</h2>
+        <p class="info">
+          回転の仕上げを繰り返すガイド付きドリル。表示された手順で回転し、固定してください。
+        </p>
+        <div class="cards" id="practiceCards"></div>
+      </section>
+      <section id="settings" class="screen" hidden>
+        <button class="back quiet" id="settingsBack">← BACK</button>
+        <div class="eyebrow">MAKE IT YOURS</div>
+        <h2>SETTINGS</h2>
+        <div class="tabs">
+          <button id="basicTab" class="primary">基本設定</button
+          ><button id="advancedTab">詳細設定</button>
+        </div>
+        <p class="info">
+          変更は自動保存。プレイ中のルール変更はRESTART後に適用。Referenceは公式未確認の暫定値を含みます。
+        </p>
+        <div id="basicSettings">
+          <div class="setting">
+            <label for="controlPreset">操作プリセット</label
+            ><select id="controlPreset">
+              <option value="default">DEFAULT</option>
+              <option value="wasd">WASD</option>
+              <option value="custom">CUSTOM</option>
+            </select>
+          </div>
+          <div id="keySettings"></div>
+          <p id="keyNotice" class="info" role="status"></p>
+          <button id="cancelBinding" hidden>キャンセル</button>
+          <div id="basicOptions"></div>
+        </div>
+        <div id="advancedSettings" hidden></div>
+        <button id="resetSettings" class="danger">RESET SETTINGS</button>
+      </section>
+      <section id="records" class="screen" hidden>
+        <button class="back quiet" data-page="home">← MAIN MENU</button>
+        <div class="eyebrow">YOUR PERSONAL BEST</div>
+        <h2>RECORDS</h2>
+        <label
+          >ルール
+          <select id="recordPreset">
+            <option value="reference">REFERENCE</option>
+            <option value="custom">CUSTOM</option>
+          </select></label
+        >
+        <div id="recordGrid" class="records"></div>
+        <h3>PLAY HISTORY</h3>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>日時</th>
+                <th>モード</th>
+                <th>ルール</th>
+                <th>スコア</th>
+                <th>時間</th>
+                <th>ライン</th>
+                <th>終了</th>
+              </tr>
+            </thead>
+            <tbody id="history"></tbody>
+          </table>
+        </div>
+        <div class="toolbar">
+          <button id="export">JSON EXPORT</button
+          ><label class="file-button"
+            >JSON IMPORT
+            <input id="import" type="file" accept="application/json,.json"
+          /></label>
+        </div>
+        <p id="recordMessage" class="info" role="status"></p>
+      </section>
+      <section id="help" class="screen" hidden>
+        <button class="back quiet" data-page="home">← MAIN MENU</button>
+        <div class="eyebrow">GET INTO THE FLOW</div>
+        <h2>HOW TO PLAY</h2>
+        <dl class="instructions">
+          <dt>01 — ラインをそろえる</dt>
+          <dd>
+            横10マスを埋めると消去。7-Bagで7種類が1個ずつ。SRS回転、5
+            NEXT、HOLD、Ghostを活用しましょう。
+          </dd>
+          <dt>02 — キーボード</dt>
+          <dd>
+            ← →：移動 / ↓：Soft Drop / Space：Hard Drop<br />Z：左回転 /
+            X・↑：右回転 / A：180°回転（WASDではQ） / C・Shift：HOLD /
+            Esc：Pause<br />設定から複数キーを自由に割り当て可能。長押しは独自DAS/ARR。次ミノ前の回転・HOLDは予約されます。180°回転は独自キック仕様です。回転の同時予約は最後の方向を優先、HOLD→回転の順に適用。長押し回転は1回です。
+          </dd>
+          <dt>03 — タッチ</dt>
+          <dd>
+            盤面左/右半分をタップして左/右回転。横スワイプで移動、下へゆっくりドラッグでSoft
+            Drop。初期設定は上フリックでHard
+            Drop。設定で高速下フリックにも変更可能。HOLD枠と画面ボタンも使えます。
+          </dd>
+          <dt>04 — モード</dt>
+          <dd>
+            MARATHONは150ライン、SPRINTは40ライン、ULTRAは180秒。ENDLESSは無制限。PRACTICEはフリーと回転・全消しドリル。
+          </dd>
+          <dt>05 — ボーナスと暫定仕様</dt>
+          <dd>
+            TetrisとT-Spin系消去を続けるとB2B。連続消去でCombo、全消しでPerfect
+            Clear。通常100/300/500/800×Level、T-Spin 400/800/1200/1600、Mini
+            100/200/400。PC 800/1200/1800/2000を加算。Lock
+            500ms・最大15リセット、ARE
+            120ms・ライン消去は合計220ms。これらは公式未確認の暫定値です。
+          </dd>
+          <dt>06 — 保存</dt>
+          <dd>
+            設定と履歴は端末内IndexedDBへ保存。CUSTOMルール記録は別集計。記録はJSONでバックアップできます。タブ非表示・フォーカス喪失時は自動Pause。
+          </dd>
+        </dl>
+      </section>
+      <section id="game" hidden>
+        <div class="game-top">
+          <b id="modeLabel"></b><button id="pauseBtn">Ⅱ PAUSE</button>
+        </div>
+        <div class="arena">
+          <aside class="side">
+            <button class="panel hold" id="holdBtn">
+              <span class="panel-label">HOLD</span
+              ><canvas id="hold" class="mini" aria-label="HOLDミノ"></canvas>
+            </button>
+            <div class="panel">
+              <div class="stat">
+                <span>SCORE</span><strong class="accent" id="score">0</strong>
+              </div>
+              <div class="stat">
+                <span>TIME</span><strong class="time" id="time">0:00</strong>
+              </div>
+              <div class="stat">
+                <span>LINES</span><strong id="lines">0</strong>
+              </div>
+              <div class="stat">
+                <span>LEVEL</span><strong id="level">1</strong>
+              </div>
+            </div>
+            <div id="detailStats" class="panel info"></div>
+          </aside>
+          <div class="board-wrap">
+            <canvas
+              id="board"
+              class="board"
+              aria-label="テトリス盤面 10列20行"
+            ></canvas>
+            <div id="toast" class="toast" role="status"></div>
+            <div id="countdown" class="countdown" hidden></div>
+          </div>
+          <aside class="side">
+            <div class="panel next">
+              <div class="panel-label">NEXT / 5</div>
+              <canvas id="next0" class="mini"></canvas
+              ><canvas id="next1" class="mini"></canvas
+              ><canvas id="next2" class="mini"></canvas
+              ><canvas id="next3" class="mini"></canvas
+              ><canvas id="next4" class="mini"></canvas>
+            </div>
+            <div class="info" id="ruleBadge"></div>
+          </aside>
+        </div>
+        <div class="touchbar" id="touchbar">
+          <button data-action="hold" aria-label="ホールド">H</button
+          ><button data-action="ccw" aria-label="左回転">↶</button
+          ><button data-action="left" aria-label="左移動">←</button
+          ><button data-action="soft" aria-label="ソフトドロップ">↓</button
+          ><button data-action="right" aria-label="右移動">→</button
+          ><button data-action="cw" aria-label="右回転">↷</button
+          ><button data-action="half" aria-label="180度回転">180°</button
+          ><button data-action="hard" aria-label="ハードドロップ">⤓</button>
+        </div>
+        <div class="game-help" id="gameHelp"></div>
+        <div class="practice-tools" id="practiceTools" hidden>
+          <button id="resetDrill">盤面をリセット</button
+          ><button id="nextDrill">次のドリル →</button>
+        </div>
+      </section>
+    </main>
+    <footer>NEON FALL / ORIGINAL DESIGN · NO BGM · LOCAL FIRST</footer>
+    <div
+      class="modal"
+      id="overlay"
+      hidden
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="dialogTitle"
+    >
+      <div class="dialog" tabindex="-1">
+        <div class="eyebrow" id="dialogEyebrow"></div>
+        <h2 id="dialogTitle"></h2>
+        <div id="resultBody"></div>
+        <div class="menu" id="pauseMenu">
+          <button class="primary" id="resume">RESUME</button
+          ><button id="restart">RESTART</button
+          ><button id="inGameSettings">SETTINGS</button
+          ><button id="quit">MAIN MENU</button>
+        </div>
+        <div class="menu" id="resultMenu" hidden>
+          <button class="primary" id="retry">RETRY</button
+          ><button id="resultHome">MAIN MENU</button>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

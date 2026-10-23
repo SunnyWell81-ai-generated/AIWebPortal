@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="AIでつくったWebサイト、ツール、ゲームをひとつの場所に。あなたのWebライブラリ。" />
+    <meta name="color-scheme" content="light dark" />
+    <title>AI Web Portal — Webライブラリ</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <script>
+      // First-paint read only. All writes and validated application reads live in storage.js.
+      try {
+        const mode = JSON.parse(localStorage.getItem('ai-web-portal:v1:theme'));
+        document.documentElement.dataset.theme = ['light', 'dark'].includes(mode) ? mode : 'system';
+      } catch { document.documentElement.dataset.theme = 'system'; }
+    </script>
+    <script type="module" crossorigin src="/assets/index-dbJQsYZH.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-B1tahi5Z.css">
+  </head>
+  <body>
+    <a class="skip-link" href="#main">コンテンツへ移動</a>
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="brand" href="/" aria-label="AI Web Portal ホーム">
+          <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><path d="M17.5 14v7M14 17.5h7"/></svg></span>
+          <span>AI Web Portal<span class="brand-subtitle">YOUR CREATIVE LIBRARY</span></span>
+        </a>
+        <div class="header-actions">
+          <button id="header-favorites" class="icon-button" type="button" aria-label="お気に入りを表示" title="お気に入り"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2-5.6-3-5.6 3 1.1-6.2L3 9.6l6.2-.9Z"/></svg></button>
+          <span class="header-divider" aria-hidden="true"></span>
+          <label class="theme-control"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 21h8m-4-4v4"/></svg><span class="sr-only">カラーテーマ</span><select id="theme"><option value="system">システム</option><option value="light">ライト</option><option value="dark">ダーク</option></select></label>
+        </div>
+      </div>
+    </header>
+    <main id="main" class="main" tabindex="-1">
+      <section class="intro" aria-labelledby="page-title">
+        <div class="eyebrow"><span aria-hidden="true"></span> A SPACE FOR YOUR IDEAS</div>
+        <h1 id="page-title">つくったものを、<br class="mobile-break" />ひとつの場所に<span class="title-dot">。</span></h1>
+        <p>AIとつくる、小さなアイデアから新しい体験まで。<br />Webサイト・ツール・ゲームを集めた、あなたのライブラリ。</p>
+      </section>
+      <section class="library" aria-label="Webサイトライブラリ">
+        <div class="library-heading">
+          <nav class="view-nav" aria-label="ライブラリの表示">
+            <button type="button" data-view="all" class="view-button" aria-pressed="true"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>すべて<span id="all-count" class="count">0</span></button>
+            <button type="button" data-view="favorites" class="view-button" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2-5.6-3-5.6 3 1.1-6.2L3 9.6l6.2-.9Z"/></svg>お気に入り<span id="favorite-count" class="count">0</span></button>
+            <button type="button" data-view="recent" class="view-button" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>最近開いた</button>
+          </nav>
+          <span class="library-label">PERSONAL COLLECTION</span>
+        </div>
+        <div class="toolbar">
+          <div class="search-field"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 4 4"/></svg><label class="sr-only" for="search">サイト名・説明を検索</label><input id="search" type="search" placeholder="サイト名やキーワードで検索…" autocomplete="off" maxlength="500" /><button id="clear-search" type="button" class="icon-button" aria-label="検索文字列をクリア" hidden>×</button></div>
+          <div class="sort-control"><label for="sort">並び替え</label><select id="sort"><option value="newest">新着順</option><option value="name-asc">名前 A → Z</option><option value="name-desc">名前 Z → A</option><option value="recent">最近開いた順</option></select></div>
+        </div>
+        <div id="categories" class="categories" role="group" aria-label="カテゴリで絞り込み"></div>
+        <div class="results-heading"><h2 id="results-title">すべてのサイト</h2><p id="result-count" role="status" aria-live="polite" aria-atomic="true">読み込み中…</p></div>
+        <p id="storage-notice" class="notice" role="status" hidden>ブラウザへの保存が利用できません。お気に入り・履歴・テーマはこのページを開いている間だけ保持されます。</p>
+        <div id="site-grid" class="site-grid" aria-label="サイト一覧" aria-busy="true"></div>
+        <div id="empty-state" class="empty-state" hidden>
+          <div class="empty-art" aria-hidden="true"><svg viewBox="0 0 120 96" fill="none"><rect x="22" y="12" width="76" height="59" rx="8"/><path d="M22 29h76M32 21h1m6 0h1m6 0h1"/><rect x="33" y="40" width="23" height="20" rx="3"/><path d="M65 43h20M65 51h14M44.5 45v10m-5-5h10M45 83h30m-15-12v12"/></svg></div>
+          <h3 id="empty-title">ライブラリは、ここから。</h3>
+          <p id="empty-description">最初のサイトを追加すると、ここに表示されます。</p>
+          <p id="empty-hint" class="empty-hint"><code>public/sites/サイト名/index.html</code></p>
+          <button id="reset-filters" class="secondary-button" type="button" hidden>絞り込みをリセット</button>
+          <button id="retry" class="secondary-button" type="button" hidden>もう一度読み込む</button>
+        </div>
+        <noscript><p class="notice">一覧を表示するにはJavaScriptを有効にしてください。各サイトは、それぞれのURLから直接開くこともできます。</p></noscript>
+      </section>
+      <aside class="collection-note"><span class="note-icon" aria-hidden="true">＋</span><div><strong>次のアイデアも、この場所へ。</strong><p>サイトのフォルダを追加するだけで、ライブラリが育っていきます。</p></div><span class="note-label">MADE WITH AI. CURATED BY YOU.</span></aside>
+    </main>
+    <footer class="site-footer"><span>AI Web Portal<span class="footer-dot"> / </span>小さなアイデアを、かたちに。</span><span>Built to explore.</span></footer>
+  </body>
+</html>
