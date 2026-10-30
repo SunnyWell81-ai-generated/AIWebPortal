@@ -5,10 +5,64 @@
       "id": "tetris",
       "title": "NEON FALL / 2",
       "description": "",
-      "category": "未分類",
+      "category": "ゲーム",
       "thumbnail": "default-thumbnail.svg",
       "url": "sites/tetris/index.html",
       "registeredAt": "2026-10-23T10:11:39.236Z"
+    },
+    {
+      "id": "cosmic-rift",
+      "title": "Cosmic Rift",
+      "description": "",
+      "category": "ゲーム",
+      "thumbnail": "default-thumbnail.svg",
+      "url": "sites/cosmic-rift/index.html",
+      "registeredAt": "2026-10-30T11:13:50.000Z"
+    },
+    {
+      "id": "hit-and-blow",
+      "title": "ヒット＆ブロー",
+      "description": "",
+      "category": "ゲーム",
+      "thumbnail": "default-thumbnail.svg",
+      "url": "sites/hit-and-blow/index.html",
+      "registeredAt": "2026-10-30T11:13:50.000Z"
+    },
+    {
+      "id": "memory-pairs",
+      "title": "神経衰弱",
+      "description": "",
+      "category": "ゲーム",
+      "thumbnail": "default-thumbnail.svg",
+      "url": "sites/memory-pairs/index.html",
+      "registeredAt": "2026-10-30T11:13:50.000Z"
+    },
+    {
+      "id": "reversi",
+      "title": "リバーシ(オセロ)",
+      "description": "",
+      "category": "ゲーム",
+      "thumbnail": "default-thumbnail.svg",
+      "url": "sites/reversi/index.html",
+      "registeredAt": "2026-10-30T11:13:50.000Z"
+    },
+    {
+      "id": "yacht",
+      "title": "ヨット",
+      "description": "",
+      "category": "ゲーム",
+      "thumbnail": "default-thumbnail.svg",
+      "url": "sites/yacht/index.html",
+      "registeredAt": "2026-10-30T11:13:50.000Z"
+    },
+    {
+      "id": "CHROMIX",
+      "title": "CHROMIX",
+      "description": "",
+      "category": "ゲーム",
+      "thumbnail": "default-thumbnail.svg",
+      "url": "sites/CHROMIX/index.html",
+      "registeredAt": "2026-10-30T11:13:50.000Z"
     }
   ]
 }

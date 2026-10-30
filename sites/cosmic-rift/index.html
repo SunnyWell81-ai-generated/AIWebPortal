@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#090b12"><meta name="description" content="ブラックホールからDark Matterを採取し、銀河、次元、現実そのものを拡張する宇宙Incremental Game。">
+<title>COSMIC RIFT — 宇宙の向こうへ</title>
+<link rel="icon" href="./favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="./styles.css?v=2.0-rift-evolution">
+<!-- Keep schema migrations and the facility table on the same release in browser caches. -->
+<script type="importmap">{"imports":{
+ "./js/rifts.mjs":"./js/rifts.mjs?v=2.0-rift-evolution",
+ "./js/rift-view.mjs":"./js/rift-view.mjs?v=2.0-rift-evolution",
+ "./js/infinite-skills.mjs":"./js/infinite-skills.mjs?v=2.0-rift-evolution",
+ "./js/skills-view.mjs":"./js/skills-view.mjs?v=2.0-rift-evolution",
+ "./js/prestige.mjs":"./js/prestige.mjs?v=2.0-rift-evolution",
+ "./js/research.mjs":"./js/research.mjs?v=2.0-rift-evolution",
+ "./js/upgrades-view.mjs":"./js/upgrades-view.mjs?v=2.0-rift-evolution",
+ "./js/config.mjs":"./js/config.mjs?v=2.0-rift-evolution",
+ "./js/number.mjs":"./js/number.mjs?v=2.0-rift-evolution",
+ "./js/engine.mjs":"./js/engine.mjs?v=2.0-rift-evolution",
+ "./js/save.mjs":"./js/save.mjs?v=2.0-rift-evolution",
+ "./js/clock.mjs":"./js/clock.mjs?v=2.0-rift-evolution",
+ "./js/statistics.mjs":"./js/statistics.mjs?v=2.0-rift-evolution",
+ "./js/icons.mjs":"./js/icons.mjs?v=2.0-rift-evolution",
+ "./js/scene.mjs":"./js/scene.mjs?v=2.0-rift-evolution"
+}}</script>
+</head>
+<body>
+<div class="app-shell">
+<header class="app-header">
+ <a class="brand" href="./" aria-label="Cosmic Rift ホーム"><span class="brand-mark" data-icon="rift"></span><span>COSMIC<span class="brand-light">RIFT</span><small>INCREMENTAL UNIVERSE</small></span></a>
+ <div class="header-coordinate"><span class="tiny-star">✦</span> LOCAL GROUP <span class="coordinate-divider">/</span> SECTOR <span id="sector-number">001</span></div>
+ <div class="header-actions"><span class="save-status" id="save-status">自動保存 待機中</span><button id="manual-save" class="icon-button" aria-label="手動セーブ" title="手動セーブ" data-icon="save"></button><button class="icon-button" data-view="settings" aria-label="設定" title="設定" data-icon="settings"></button></div>
+</header>
+<nav class="navigation" aria-label="ゲームメニュー" id="navigation"></nav>
+<div id="save-protection" class="save-protection" role="alert" hidden><p id="save-protection-text"></p><button class="secondary-button" data-action="export">この画面の進行をExport</button><button class="primary-button" data-action="reload-protected">保存済みデータを再読み込み</button></div>
+<main class="workspace" id="workspace">
+ <aside class="observatory" aria-label="主要ステータス">
+  <div class="section-eyebrow">YOUR UNIVERSE <span class="live-label"><i></i> LIVE</span></div>
+  <div class="resource-card dark-resource"><div class="resource-label"><span class="matter-dot"></span> Dark Matter</div><strong id="dm-value">0</strong><div class="resource-foot"><span>自動生産</span><span><b id="dps-value">0</b> /sec</span></div></div>
+  <div class="resource-card red-resource"><div class="resource-label"><span class="matter-dot"></span> Red Matter <span class="permanent-tag">永続</span></div><strong id="rm-value">0</strong><div class="resource-foot"><span>自動生産</span><span><b id="rmps-value">0</b> /sec</span></div></div>
+  <div class="resource-card infinity-resource"><div class="resource-label"><span data-icon="infinity"></span> Infinity Matter</div><strong id="im-value">0</strong><div class="resource-foot"><span>利用可能なSkill Point</span><button class="text-button" data-view="skills">Skillを見る <span>↗</span></button></div></div>
+  <div class="telemetry"><div><span>クリックの力</span><b><span id="click-value">1</span> <small>DM</small></b></div><div><span>周回プレイ時間</span><b id="run-time">00:00</b></div><div><span>施設数</span><b id="building-total">0</b></div></div>
+  <div class="infinity-goal"><div class="goal-heading"><span data-icon="infinity"></span><b>次のInfinity Matter</b><span>+1</span></div><div class="goal-values"><span id="lifetime-value">0</span><span id="infinity-goal">100 K DM</span></div><div class="progress-track" role="progressbar" aria-label="次のInfinity Matter" aria-valuemin="0" aria-valuemax="100" id="infinity-progress"><i></i></div><p>Lifetime Dark Matterで解放。<br>宇宙を再生しても進行は残ります。</p></div>
+  <button class="prestige-hint" data-view="prestige"><span class="prestige-icon" data-icon="prestige"></span><span><b id="prestige-side-title">次の宇宙を、もっと速く。</b><small id="prestige-side-text">1 M DMでPrestigeを解放</small></span><span>↗</span></button>
+  <div class="sidebar-bottom"><span>OBSERVATORY ONLINE</span><span>v2.0</span></div>
+ </aside>
+ <section class="stage" aria-label="ブラックホール観測エリア" id="stage">
+  <div class="stage-topline"><span><i class="crosshair"></i> SINGULARITY OBSERVATORY</span><span class="phase-badge" id="phase">PHASE 01 · MANUAL</span></div>
+  <div class="matter-readout"><span class="eyebrow">DARK MATTER</span><h1 id="main-dm">0</h1><div class="production-pill"><span class="pulse-dot"></span><span id="main-dps">0</span><span>DM / sec</span></div></div>
+  <div class="blackhole-area" id="blackhole-area"><div id="fever-frame" class="fever-frame" aria-hidden="true"></div><div class="orbit-label orbit-label-top"><span>01</span> EVENT HORIZON <i></i></div><button class="blackhole-button" id="blackhole" aria-label="ブラックホールからDark Matterを採取"><canvas id="blackhole-canvas" aria-hidden="true"></canvas><span class="blackhole-focus"></span></button><div class="orbit-label orbit-label-bottom"><i></i> STABLE SINGULARITY <span>∞</span></div><div id="click-popups" aria-hidden="true"></div><button id="rift-button" class="rift-button" aria-label="Cosmic Riftを捕捉" hidden><span class="rift-shape">✧</span><span>COSMIC RIFT</span><small>タップして捕捉</small></button></div>
+  <div class="interaction-guide"><span class="click-hint">クリック・タップで採取</span><span class="keyboard-hint">または <kbd>SPACE</kbd></span><div class="click-yield">+<b id="yield-value">1</b> DM <span>/ CLICK</span><span id="combo-label"></span></div></div>
+  <p class="combo-spec" id="combo-spec"></p>
+  <div class="active-effects" id="active-effects" aria-label="発動中の効果"></div>
+  <div class="next-objective" id="next-objective"></div>
+  <div class="event-log"><div class="log-title"><span data-icon="stats"></span> TRANSMISSION LOG <span class="log-line"></span></div><div id="event-log"><p><time>00:00</time><span>観測を開始。最初のDark Matterを採取しよう。</span></p></div></div>
+  <div class="stage-footer"><span>THE UNIVERSE HAS NO FINISH LINE.</span><span>✧</span></div>
+ </section>
+ <section class="shop" id="shop" aria-label="施設とゲームメニュー"><div id="shop-content"></div></section>
+</main>
+<footer class="app-footer"><span><i class="pulse-dot"></i> ALL SYSTEMS NOMINAL</span><span>小さな一粒から、無限の宇宙へ。</span><button class="text-button" id="help-button">プレイガイド <span data-icon="info"></span></button></footer>
+</div>
+<button class="return-to-hole" id="return-to-hole" data-action="observe" hidden><span data-icon="blackhole"></span><span>ブラックホールへ</span></button>
+<div class="toast-stack" id="toasts" role="status" aria-live="polite"></div>
+<dialog id="game-dialog"><div class="dialog-top"><span class="eyebrow" id="dialog-eyebrow">OBSERVATORY</span><button class="icon-button" id="dialog-close" aria-label="閉じる" data-icon="close"></button></div><div id="dialog-content"></div></dialog>
+<input type="file" id="import-file" accept=".json,application/json" hidden>
+<script type="module" src="./js/app.mjs?v=2.0-rift-evolution"></script>
+<noscript><p class="noscript">このゲームを遊ぶにはJavaScriptを有効にしてください。</p></noscript>
+</body></html>
