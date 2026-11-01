@@ -1,11 +1,8 @@
 import {BUILDINGS,CLICK_UPGRADES,CONFIG,FACILITY_UPGRADES,RIFT_RESEARCH} from './config.mjs';
 import {H} from './number.mjs';
-import {icon} from './icons.mjs';
-import {researchChoices,nextResearch,researchHistory,rangeCount,endlessAffordable} from './research.mjs';
-
-const disclosure=new Map(),models=new WeakMap(),bound=new WeakSet();
-let facilityFilter='all';
-const escape=value=>String(value).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+import {researchChoices,nextResearch,researchHistory,rangeCount,endlessAffordable,rangeContains,legacyFacilityMultiplier} from './research.mjs';
+import {shopCard,syncShopCard,availableMarkup,updateAvailable,retainShopPosition,escapeHtml} from './shop-ui.mjs';
+const models=new WeakMap(),bound=new WeakSet();let facilityFilter='all',categoryFilter='all';
 export const multiplierText=value=>Number(value.toFixed(7)).toLocaleString('en-US',{maximumFractionDigits:7});
 export function groupAvailability(game,group){
  const ordinary=group.choices.some(u=>game.state.dm.gte(u.cost)),endless=endlessAffordable(game,group.building.id);
@@ -15,63 +12,45 @@ export function upgradeViewModel(game){return BUILDINGS.map(b=>{
  const s=game.state,owned=s.buildings[b.id]+s.redBuildings[b.id];
  return {building:b,owned,choices:researchChoices(game,b.id),next:nextResearch(b.id,owned),history:researchHistory(game,b.id),purchased:rangeCount(s.facilityResearch[b.id])+FACILITY_UPGRADES.filter(u=>u.building===b.id&&s.upgrades.includes(u.id)).length};
 });}
-function row(u,fmt,mode='available'){
- const multiplier=u.multiplier??2,legacy=!u.generated,owned=mode==='owned',next=mode==='next';
- return `<article class="research-row ${next?'research-next':''}" ${next?'':`data-research-id="${u.id}"`}>
-  <div class="research-row-top"><b>${u.amount.toLocaleString('ja-JP')}基研究</b><strong>×${multiplierText(multiplier)}</strong></div>
-  <p>${legacy?u.description:`${u.major?'主要研究 · ':u.amount>1000?'中間研究 · ':''}通常DM施設の生産を強化`}${next?' · 次の解放':''}</p>
-  <small data-research-requirement="${u.id}">必要 ${u.amount.toLocaleString('ja-JP')}基</small>
-  <div class="research-row-action"><span>${fmt(u.cost)} <small>DM</small></span>${owned?'<b class="research-owned-label">取得済み</b>':next?'<span class="research-locked">未解放</span>':`<button class="primary-button" data-upgrade="${u.id}" aria-label="${escape(BUILDINGS[u.building].name)} ${u.amount}基研究を購入">研究する</button>`}</div>
-  ${owned?'':`<small class="research-shortfall" data-shortfall="${u.id}"></small>`}
- </article>`;
+
+export function upgradeItem(game,u){
+ const s=game.state,owned=u.generated?rangeContains(s.facilityResearch[u.building],u.index):s.upgrades.includes(u.id),unlocked=game.upgradeAvailable(u),price=H(u.cost),building=u.building!==undefined?BUILDINGS[u.building]:null;
+ const status=owned?'owned':!unlocked?'locked':s.dm.gte(price)?'available':'poor';
+ const total=s.buildings.reduce((a,b)=>a+b,0)+s.redBuildings.reduce((a,b)=>a+b,0),factor=building?(u.generated?u.multiplier:legacyFacilityMultiplier(u.building,u.tier,s.buildings,total)):null;
+ const effect=building?`通常DM生産 ×${multiplierText(factor)}${u.generated?'':` · ${u.description}`}`:u.description;
+ const requirement=building?`必要 ${u.amount.toLocaleString('ja-JP')}基 / 現在 ${(s.buildings[u.building]+s.redBuildings[u.building]).toLocaleString('ja-JP')}基`:`${u.unlock?`解放：周回 ${u.unlock.toLocaleString('ja-JP')} DM · `:''}前提：${u.requires?game.getUpgrade(u.requires).name:'なし'}`;
+ return {key:`upgrade:${u.id}`,kind:'upgrade',id:u.id,name:building?(u.generated?u.name:`${u.name} · ${u.amount.toLocaleString('ja-JP')}基`):u.name,category:building?building.name:RIFT_RESEARCH.some(r=>r.id===u.id)?'Cosmic Rift Research':'クリック・コンボ',effect,current:owned?'適用中':'未取得',next:owned?'':effect,price,currency:'DM',status,requirement,levelLabel:owned?'この周回で取得済み':'この周回のみ',shortfall:status==='poor'?'':status==='locked'?'解放条件・前提研究を満たすと購入できます':''};
 }
+export function endlessItem(game,id){
+ const s=game.state,owned=s.buildings[id]+s.redBuildings[id],level=s.endless[id],price=game.repeatCost(id),max=level>=1e9,status=max?'max':owned<CONFIG.repeatUpgrade.requirement?'locked':endlessAffordable(game,id)?'available':'poor';
+ return {key:`repeat:${id}`,kind:'repeat',id,name:`${BUILDINGS[id].name} · Endless Research`,category:BUILDINGS[id].name,effect:'節目研究と独立・通常DM施設のみを強化',current:`Lv.${level}`,next:max?'':`現在の生産から ×${CONFIG.repeatUpgrade.power}`,price,currency:'DM',status,requirement:`必要 ${CONFIG.repeatUpgrade.requirement}基 / 現在 ${owned.toLocaleString('ja-JP')}基`,levelLabel:`Lv.${level.toLocaleString('ja-JP')}`,shortfall:status==='locked'?`あと ${CONFIG.repeatUpgrade.requirement-owned}基`:''};
+}
+export function upgradeCatalog(game){
+ const groups=upgradeViewModel(game);
+ const sections=[{id:'click',name:'クリック・コンボ研究',items:CLICK_UPGRADES.map(u=>upgradeItem(game,u))},{id:'rift',name:'Cosmic Rift Research',items:RIFT_RESEARCH.map(u=>upgradeItem(game,u))}];
+ for(const g of groups){const ids=new Set(),specs=[...FACILITY_UPGRADES.filter(u=>u.building===g.building.id),...g.choices,...g.history,...(g.next?[g.next]:[])].filter(u=>!ids.has(u.id)&&ids.add(u.id));sections.push({id:`facility-${g.building.id}`,name:g.building.name,group:g,items:[...specs.map(u=>upgradeItem(game,u)),endlessItem(game,g.building.id)]});}
+ return sections;
+}
+export const availableUpgrades=game=>upgradeCatalog(game).flatMap(s=>s.items).filter(i=>i.status==='available');
+function present(item,game,fmt){return {...item,current:item.kind==='repeat'?`Endless倍率 ×${fmt(H(CONFIG.repeatUpgrade.power).pow(game.state.endless[item.id]))}`:item.current,shortfall:item.status==='poor'?`あと ${fmt(item.price.sub(game.state.dm))} DM`:item.shortfall};}
+function structure(game){const s=game.state;return [s.upgrades.join(','),game.researchRevision,s.endless.join(','),s.buildings.join(','),s.redBuildings.join(','),CLICK_UPGRADES.map(u=>game.upgradeAvailable(u)?1:0).join('')].join('|');}
 export function mountUpgradeView(root,game,fmt){
- root.querySelectorAll('details[data-disclosure]').forEach(el=>disclosure.set(el.dataset.disclosure,el.open));
- const focused=root.contains(document.activeElement)?document.activeElement:null,focusId=focused?.dataset.upgrade,focusGroup=focused?.closest('[data-research-group]')?.dataset.researchGroup,focusDisclosure=focused?.closest('[data-disclosure]')?.dataset.disclosure;
- const priority=g=>groupAvailability(game,g).priority;
- const groups=upgradeViewModel(game).sort((a,b)=>priority(a)-priority(b));models.set(root,groups);
- const open=key=>disclosure.get(key)??(key==='facility-0');
- root.innerHTML=`<div class="view-heading"><div><span class="eyebrow">EVOLVE YOUR UNIVERSE</span><h2>Upgrades</h2><p>通常＋永続施設の所有数で解放。通常DM施設は購入して強化。RM施設は各研究の増加分を半分ずつ自動適用します。</p></div><div class="balance"><span data-upgrade-balance></span><small> DM</small></div></div>
- <p class="research-guide">100基までは従来の節目、150基からは50基ごと。1,000基以降も新しい研究が続きます。購入可能な施設を先に表示します。各施設の未購入候補は最大${CONFIG.facilityResearch.visibleLimit}件です。</p>
- <details class="research-clicks" data-disclosure="clicks" ${open('clicks')?'open':''}><summary>クリック・コンボ研究 <span>${game.state.upgrades.filter(id=>CLICK_UPGRADES.some(u=>u.id===id)).length} / ${CLICK_UPGRADES.length} 取得</span></summary><div class="upgrade-grid">${CLICK_UPGRADES.map(u=>`<article class="upgrade-card"><h3>${u.name}</h3><p>${u.description}</p><small>解放：周回 ${fmt(u.unlock)} DM${u.requires?` · ${CLICK_UPGRADES.find(x=>x.id===u.requires).name}`:''}</small><div class="card-action"><span class="card-cost">${fmt(u.cost)} DM</span>${game.state.upgrades.includes(u.id)?'<b class="research-owned-label">取得済み</b>':`<button class="primary-button" data-upgrade="${u.id}">研究する</button>`}</div><small class="research-shortfall" data-shortfall="${u.id}"></small></article>`).join('')}</div></details>
- <details class="research-clicks rift-research" data-disclosure="rifts" ${open('rifts')?'open':''}><summary>Cosmic Rift Research <span>${RIFT_RESEARCH.filter(u=>game.state.upgrades.includes(u.id)).length} / ${RIFT_RESEARCH.length} 取得</span></summary><p class="research-guide">DMで購入・転生でリセット。Fever Evolution Lv.1以上ではLuckの確率に優先します。Frequencyは次回の出現間隔抽選から、Durationは次に捕捉する効果から適用します。</p><div class="upgrade-grid">${RIFT_RESEARCH.map(u=>`<article class="upgrade-card"><h3>${u.name}</h3><p>${u.description}</p><small>前提：${u.requires?RIFT_RESEARCH.find(x=>x.id===u.requires).name:'なし'}</small><div class="card-action"><span class="card-cost">${fmt(u.cost)} DM</span>${game.state.upgrades.includes(u.id)?'<b class="research-owned-label">取得済み</b>':`<button class="primary-button" data-upgrade="${u.id}">研究する</button>`}</div><small class="research-shortfall" data-shortfall="${u.id}"></small></article>`).join('')}</div></details>
- <label class="research-filter">表示する施設<select data-research-filter aria-label="表示する施設"><option value="all">すべての施設</option>${BUILDINGS.map(b=>`<option value="${b.id}" ${facilityFilter===String(b.id)?'selected':''}>${b.name}</option>`).join('')}</select></label>
- <div class="research-groups ${facilityFilter==='all'?'':'is-filtered'}">${groups.map(g=>{
-  const b=g.building,key=`facility-${b.id}`;
-  return `<details class="research-group" data-disclosure="${key}" data-research-group="${b.id}" ${facilityFilter!=='all'&&facilityFilter!==String(b.id)?'hidden':''} ${open(key)?'open':''}><summary><span class="research-facility-icon">${icon(b.symbol,22)}</span><span><b>${b.name}</b><small>所有 ${g.owned.toLocaleString('ja-JP')}基 · 次の解放 ${g.next?`${g.next.amount.toLocaleString('ja-JP')}基`:'所有上限'}</small></span><span class="research-availability" data-availability="${b.id}"></span></summary>
-   <div class="research-group-body"><p class="research-effect-note">通常 ${game.state.buildings[b.id].toLocaleString('ja-JP')}基 ＋ 永続 ${game.state.redBuildings[b.id].toLocaleString('ja-JP')}基 · ${g.purchased.toLocaleString('ja-JP')}件取得</p>
-    <p class="research-auto-note" data-permanent-auto="${b.id}"></p>
-    <div class="research-candidates">${g.choices.length?g.choices.map(u=>row(u,fmt)).join(''):'<p class="research-empty">現在解放済みの研究をすべて取得しています。</p>'}</div>
-    ${g.next?row(g.next,fmt,'next'):'<p>施設所有数の上限に到達しました。</p>'}
-    <details class="research-history" data-disclosure="history-${b.id}" ${open(`history-${b.id}`)?'open':''}><summary>取得済み ${g.purchased.toLocaleString('ja-JP')}件 <small>上位${CONFIG.facilityResearch.historyLimit}件まで表示</small></summary>${g.history.length?g.history.map(u=>row(u,fmt,'owned')).join(''):'<p class="research-empty">まだ購入していません。</p>'}</details>
-    <section class="research-endless"><h3>Endless Research · Lv.${game.state.endless[b.id]}</h3><p>通常DM施設の生産 ×${CONFIG.repeatUpgrade.power} · 所有${CONFIG.repeatUpgrade.requirement}基で解放。節目の研究とは別に重なります。</p><div class="research-row-action"><span data-repeat-cost="${b.id}">${fmt(game.repeatCost(b.id))} DM</span><button class="secondary-button" data-repeat="${b.id}" aria-label="${b.name}のEndless Researchを購入">研究する</button></div><small class="research-shortfall" data-repeat-shortfall="${b.id}"></small></section>
-   </div></details>`;
- }).join('')}</div>`;
- if(!bound.has(root)){
-  root.addEventListener('toggle',event=>{if(event.target.matches('details[data-disclosure]'))disclosure.set(event.target.dataset.disclosure,event.target.open);},true);
-  root.addEventListener('change',event=>{if(!event.target.matches('[data-research-filter]'))return;facilityFilter=event.target.value;root.querySelector('.research-groups').classList.toggle('is-filtered',facilityFilter!=='all');root.querySelectorAll('[data-research-group]').forEach(group=>{group.hidden=facilityFilter!=='all'&&group.dataset.researchGroup!==facilityFilter;if(facilityFilter===group.dataset.researchGroup)group.open=true;});});
-  bound.add(root);
- }
- updateUpgradeView(root,game,fmt);
- if(focused)restoreUpgradeFocus(root,focusId,focusGroup,focusDisclosure);
+ const restore=retainShopPosition(root),sections=upgradeCatalog(game),signature=structure(game);models.set(root,{game,signature,sections});
+ root.innerHTML=`<div class="view-heading"><div><span class="eyebrow">EVOLVE YOUR UNIVERSE</span><h2>Upgrades</h2><p>DMで購入・転生でリセット。施設研究は通常＋永続の合計所有数で解放します。</p></div><div class="balance"><span data-upgrade-balance></span><small> DM</small></div></div>${availableMarkup('Upgrades')}<section class="all-catalog" aria-labelledby="all-upgrades-title"><div class="catalog-heading"><h3 id="all-upgrades-title">All Upgrades</h3></div><div class="filter-tabs" aria-label="Upgradeの種類">${[['all','すべて'],['click','クリック・コンボ'],['rift','Cosmic Rift'],['facility','施設研究']].map(([id,name])=>`<button class="filter-tab ${categoryFilter===id?'active':''}" data-upgrade-category="${id}" aria-pressed="${categoryFilter===id}">${name}</button>`).join('')}</div><label class="research-filter">施設を絞り込む<select data-research-filter aria-label="表示する施設"><option value="all">すべての施設</option>${BUILDINGS.map(b=>`<option value="${b.id}" ${facilityFilter===String(b.id)?'selected':''}>${b.name}</option>`).join('')}</select></label><p class="catalog-note">通常・Rift研究は全件表示。無限施設研究は各施設の未購入候補${CONFIG.facilityResearch.visibleLimit}件・購入済み上位${CONFIG.facilityResearch.historyLimit}件・次の解放を表示し、購入に応じて補充します。RM施設の自動強化はDMでの研究購入とは独立です。絞り込みはAllだけに適用します。</p>${sections.map(section=>`<section class="catalog-group" data-upgrade-section="${section.id}"><h3>${section.name}</h3>${section.group?`<p class="catalog-note" data-permanent-auto="${section.group.building.id}"></p>`:''}<div class="purchase-grid">${section.items.map(item=>shopCard(present(item,game,fmt),fmt)).join('')}</div></section>`).join('')}</section>`;
+ if(!bound.has(root)){root.addEventListener('change',e=>{if(e.target.matches('[data-research-filter]')){facilityFilter=e.target.value;applyFilter(root);}});root.addEventListener('click',e=>{const button=e.target.closest('[data-upgrade-category]');if(button){categoryFilter=button.dataset.upgradeCategory;applyFilter(root);}});bound.add(root);}
+ applyFilter(root);updateUpgradeView(root,game,fmt);restore();
+}
+function applyFilter(root){
+ root.querySelectorAll('[data-upgrade-category]').forEach(b=>{b.classList.toggle('active',b.dataset.upgradeCategory===categoryFilter);b.setAttribute('aria-pressed',String(b.dataset.upgradeCategory===categoryFilter));});
+ root.querySelectorAll('[data-upgrade-section]').forEach(section=>{const id=section.dataset.upgradeSection,isFacility=id.startsWith('facility-');section.hidden=categoryFilter!=='all'&&(categoryFilter==='facility'?!isFacility:categoryFilter!==id)||isFacility&&facilityFilter!=='all'&&id!==`facility-${facilityFilter}`;});
 }
 export function updateUpgradeView(root,game,fmt){
- const groups=models.get(root);if(!groups)return;
+ const model=models.get(root);if(!model)return;if(model.game!==game||model.signature!==structure(game)){mountUpgradeView(root,game,fmt);return;}
  root.querySelector('[data-upgrade-balance]').textContent=fmt(game.state.dm);
- root.querySelectorAll('[data-upgrade]').forEach(button=>{const u=game.getUpgrade(button.dataset.upgrade);button.disabled=!game.upgradeAvailable(u)||!game.state.dm.gte(u.cost);});
- root.querySelectorAll('[data-shortfall]').forEach(el=>{const u=game.getUpgrade(el.dataset.shortfall),missing=H(u.cost).sub(game.state.dm);el.textContent=RIFT_RESEARCH.some(r=>r.id===u.id)&&u.requires&&!game.state.upgrades.includes(u.requires)?`先に ${game.getUpgrade(u.requires).name} を研究`:missing.gt(0)?`あと ${fmt(missing)} DM`:'DM充足';});
- for(const g of groups){
-  const id=g.building.id,element=root.querySelector(`[data-research-group="${id}"]`),availability=groupAvailability(game,g);
-  element.querySelector('[data-permanent-auto]').textContent=`RM施設：自動強化 ×${fmt(game.facilityRates[id].automatic)} 適用中 · DM・RMの両方（DM研究購入とは独立）`;
-  element.style.order=String(availability.priority);root.querySelector(`[data-availability="${id}"]`).textContent=availability.label;
-  for(const u of [...g.choices,...g.history,...(g.next?[g.next]:[])]){const el=element.querySelector(`[data-research-requirement="${u.id}"]`);if(el)el.textContent=`必要 ${u.amount.toLocaleString('ja-JP')}基 / 現在 ${g.owned.toLocaleString('ja-JP')}基`;}
-  const cost=game.repeatCost(id),button=root.querySelector(`[data-repeat="${id}"]`);button.disabled=!endlessAffordable(game,id);
-  root.querySelector(`[data-repeat-shortfall="${id}"]`).textContent=g.owned<CONFIG.repeatUpgrade.requirement?`あと ${CONFIG.repeatUpgrade.requirement-g.owned}基で解放`:game.state.dm.lt(cost)?`あと ${fmt(cost.sub(game.state.dm))} DM`:'DM充足';
- }
+ const sections=upgradeCatalog(game),items=sections.flatMap(s=>s.items),byKey=new Map(items.map(i=>[i.key,present(i,game,fmt)]));
+ root.querySelectorAll('.all-catalog [data-item-key]').forEach(node=>{const item=byKey.get(node.dataset.itemKey);if(item)syncShopCard(node,item,fmt);});
+ for(const b of BUILDINGS){const el=root.querySelector(`[data-permanent-auto="${b.id}"]`);el.textContent=`所有 ${(game.state.buildings[b.id]+game.state.redBuildings[b.id]).toLocaleString('ja-JP')}基 · RM自動強化 ×${fmt(game.facilityRates[b.id].automatic)}（DM・RMに適用）`;}
+ updateAvailable(root.querySelector('.available-section'),items.filter(i=>i.status==='available').map(i=>present(i,game,fmt)),fmt);
 }
-
-// Purchased buttons disappear. Restore to their disclosure instead of calling focus on false.
-export function restoreUpgradeFocus(root,id,group,disclosure){
- const next=(id?root.querySelector(`[data-upgrade="${id}"]`):null)??(group!==undefined?root.querySelector(`[data-research-group="${group}"] > summary`):null)??(disclosure?root.querySelector(`[data-disclosure="${disclosure}"] > summary`):null);
- next?.focus({preventScroll:true});
-}
+// Legacy focus helper retained for callers; new cards use retainShopPosition.
+export function restoreUpgradeFocus(root,id,group,disclosure){const next=(id?root.querySelector(`[data-upgrade="${id}"]`):null)??(group!==undefined?root.querySelector(`[data-research-group="${group}"] > summary`):null)??(disclosure?root.querySelector(`[data-disclosure="${disclosure}"] > summary`):null);next?.focus({preventScroll:true});}

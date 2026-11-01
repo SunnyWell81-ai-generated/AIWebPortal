@@ -81,3 +81,68 @@
 
 .fever-frame[data-fever-tier="legendary"]::after{content:'LEGENDARY FEVER ×777';position:absolute;top:12px;left:50%;transform:translateX(-50%);padding:5px 12px;border:1px solid #d5af6266;border-radius:20px;background:#1d1921e6;color:#f4d487;font:600 13px var(--mono);letter-spacing:1px;white-space:nowrap;pointer-events:none}
 @media(max-width:700px){.fever-frame[data-fever-tier="legendary"]::after{font-size:10px;letter-spacing:.5px;padding:4px 8px;top:10px}}
+
+/* UI quality update: desktop fills the viewport; touch layouts use one page scroller. */
+@media(min-width:1151px){
+ .app-shell{height:100vh;height:100dvh;min-height:0;display:flex;flex-direction:column}
+ .app-header,.navigation,.app-footer{flex-shrink:0}
+ .workspace{flex:1;min-height:0;overflow:hidden}
+ .observatory{min-height:0;overflow-y:auto;scrollbar-width:thin;padding-bottom:16px}
+ .stage{min-height:0;overflow-y:auto;scrollbar-width:thin}
+ .blackhole-area{flex-shrink:0}
+ .shop{min-height:0;overflow:hidden;display:flex;flex-direction:column}
+ .workspace:not(.is-subview) #shop-content{flex:1;min-height:0;display:flex;flex-direction:column}
+ .workspace:not(.is-subview) #shop-content>:not(.building-list){flex-shrink:0}
+ .building-list{flex:1;min-height:0;max-height:none;overflow-y:auto;align-content:start;scrollbar-gutter:stable}
+ .workspace.is-subview .shop{max-height:none;overflow-y:auto;scrollbar-gutter:stable}
+ .workspace.is-subview #shop-content{min-width:0}
+}
+@media(max-width:1150px){
+ .building-list{max-height:none;overflow:visible;align-content:start}
+ .workspace.is-subview .shop{max-height:none;overflow:visible}
+}
+/* Manipulation disables double-tap zoom only on controls; pinch zoom stays enabled. */
+button,a,summary,select,input,[role="button"],[role="tab"],.blackhole-button,.buy-building{touch-action:manipulation}
+.primary-button,.secondary-button,.filter-tab{min-height:44px}
+.available-section{padding:18px;background:var(--panel-raised);border:1px solid #55446a;border-radius:12px;margin:4px 0 28px;overflow-anchor:none}
+.catalog-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px;flex-wrap:wrap}
+.catalog-heading h3{font-size:18px;font-weight:600}
+.catalog-heading>span{color:var(--muted);font:11px var(--mono)}
+.catalog-note,.catalog-empty{font-size:12px;color:var(--muted);line-height:1.8;margin:0 0 14px;overflow-wrap:anywhere}
+.catalog-empty{margin:10px 0 0}
+.available-more{margin-top:14px;width:100%}
+.all-catalog{min-width:0}
+.catalog-group{margin:24px 0;min-width:0}
+.catalog-group>h3{font-size:14px;margin-bottom:10px;color:var(--text)}
+.purchase-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:12px;align-items:stretch;min-width:0}
+.purchase-card{padding:15px;background:var(--panel);border:1px solid var(--line);border-radius:9px;min-width:0;display:flex;flex-direction:column;gap:8px;overflow-wrap:anywhere}
+.purchase-card>header{display:flex;gap:8px;justify-content:space-between;align-items:flex-start}
+.purchase-card>header>small{color:var(--muted);font-size:10px;min-width:0}
+.purchase-state{font-size:10px;flex-shrink:0;color:var(--muted)}
+.purchase-card[data-status="available"]{border-color:#705896}
+.purchase-card[data-status="available"] .purchase-state{color:var(--violet)}
+.purchase-card[data-status="owned"] .purchase-state,.purchase-card[data-status="max"] .purchase-state{color:var(--cyan)}
+.purchase-card h4{font-size:14px;font-weight:600;line-height:1.5;margin:0;color:var(--text)}
+.purchase-card>p{font-size:12px;line-height:1.75;color:#bdc0d3;margin:0}
+.purchase-level,.purchase-requirement{font-size:10px;color:var(--muted);line-height:1.7}
+.purchase-effects{font-size:11px;margin:0;display:grid;gap:7px}
+.purchase-effects>div{display:grid;grid-template-columns:42px minmax(0,1fr);gap:8px}
+.purchase-effects dt{color:var(--muted)}
+.purchase-effects dd{margin:0;text-align:right;font-variant-numeric:tabular-nums;color:var(--text);line-height:1.7;min-width:0}
+.purchase-action{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:auto;padding-top:6px;flex-wrap:wrap}
+.purchase-action>strong{font:12px var(--mono);min-width:0;overflow-wrap:anywhere;text-align:right;margin-left:auto}
+.purchase-action>button{flex-shrink:0;min-height:44px;font-size:11px;padding:9px 13px}
+.purchase-card .research-shortfall{min-height:0;font-size:10px;margin:0}
+@media(max-width:700px){.available-section{padding:13px;margin-bottom:24px}.purchase-grid{grid-template-columns:minmax(0,1fr)}.purchase-card{padding:14px}.catalog-heading h3{font-size:17px}.all-catalog .filter-tabs{gap:6px}.filter-tab{padding:8px 11px}.catalog-group{margin:22px 0}}
+@media(min-width:701px) and (max-width:1150px){
+ .workspace{align-items:start}
+ .workspace>.stage,.workspace>.shop{grid-column:1/-1}
+ .shop{padding:24px 0 0;border-top:1px solid var(--line)}
+ .building-list{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+ .stage{border-right:0;padding-left:0;padding-right:0;min-height:0}
+ .blackhole-area{max-width:680px;width:100%;align-self:center;margin-left:0;margin-right:0}
+}
+@media(min-width:1151px){.observatory>*{flex-shrink:0}}
+.blackhole-area,#blackhole-canvas,.purchase-grid,.amount-buttons,.currency-tabs,.filter-tabs,.navigation,button *,summary *{touch-action:manipulation}
+.buy-building,.currency-tab,.amount-button{min-height:44px}
+@media(max-width:700px){.return-to-hole.in-catalog{position:static;display:inline-flex;align-self:flex-start;margin-top:12px;box-shadow:none;backdrop-filter:none;width:fit-content}.view-heading:has(.return-to-hole.in-catalog){flex-wrap:wrap}}
