@@ -12,8 +12,8 @@
       content="NEON FALL — original neon puzzle. Marathon, Sprint, Ultra and guided practice."
     />
     <title>NEON FALL / 2</title>
-    <script type="module" crossorigin src="./assets/index-BPU86amJ.js"></script>
-    <link rel="stylesheet" crossorigin href="./assets/index-BR_hRHPW.css">
+    <script type="module" crossorigin src="./assets/index-CftY1cXc.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/index-CvWyLfhI.css">
   </head>
   <body>
     <header>
@@ -43,7 +43,11 @@
           ><button id="towerStart" class="primary">登る →</button>
         </div>
         <p id="towerRecords" class="info"></p>
-        <div id="towerMap" class="tower-map"></div>
+        <ol
+          id="towerMap"
+          class="tower-map"
+          aria-label="Tetri Tower 全50階のミッション"
+        ></ol>
       </section>
       <section id="home" class="screen">
         <div class="hero">
@@ -104,14 +108,28 @@
         <button class="back quiet" id="settingsBack">← BACK</button>
         <div class="eyebrow">MAKE IT YOURS</div>
         <h2>SETTINGS</h2>
-        <div class="tabs">
-          <button id="basicTab" class="primary">基本設定</button
-          ><button id="advancedTab">詳細設定</button>
+        <div class="tabs" role="tablist" aria-label="設定カテゴリ">
+          <button
+            id="basicTab"
+            class="primary"
+            role="tab"
+            aria-selected="true"
+            aria-controls="basicSettings"
+          >
+            基本設定</button
+          ><button
+            id="advancedTab"
+            role="tab"
+            aria-selected="false"
+            aria-controls="advancedSettings"
+          >
+            詳細設定
+          </button>
         </div>
         <p class="info">
           操作・音・表示設定は自動保存。ゲームルール設定はカスタムモード画面に集約されています。
         </p>
-        <div id="basicSettings">
+        <div id="basicSettings" role="tabpanel" aria-labelledby="basicTab">
           <div class="setting">
             <label for="controlPreset">操作プリセット</label
             ><select id="controlPreset">
@@ -125,7 +143,12 @@
           <button id="cancelBinding" hidden>キャンセル</button>
           <div id="basicOptions"></div>
         </div>
-        <div id="advancedSettings" hidden></div>
+        <div
+          id="advancedSettings"
+          role="tabpanel"
+          aria-labelledby="advancedTab"
+          hidden
+        ></div>
         <button id="resetSettings" class="danger">RESET SETTINGS</button>
       </section>
       <section id="records" class="screen" hidden>
@@ -243,6 +266,7 @@
           <div class="board-wrap">
             <canvas
               id="board"
+              tabindex="-1"
               class="board"
               aria-label="テトリス盤面 10列20行"
             ></canvas>
