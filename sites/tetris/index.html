@@ -12,8 +12,8 @@
       content="NEON FALL — original neon puzzle. Marathon, Sprint, Ultra and guided practice."
     />
     <title>NEON FALL / 2</title>
-    <script type="module" crossorigin src="./assets/index-CNYRBrUr.js"></script>
-    <link rel="stylesheet" crossorigin href="./assets/index-CvWyLfhI.css">
+    <script type="module" crossorigin src="./assets/index-DK0UiK6W.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/index-BnSdtnur.css">
   </head>
   <body>
     <header>
@@ -26,6 +26,26 @@
       保存が利用できません。記録・設定はこのタブ内のみ保持されます。
     </div>
     <main>
+      <section id="bigbang" class="screen" hidden>
+        <button class="back quiet" data-page="modes">← 基本モード</button>
+        <div class="eyebrow">CHAIN THE PUZZLES</div>
+        <h2>BIG BANG</h2>
+        <p class="info">
+          高く積まれた固定譜面をシャッフルして連続攻略。指定ミノ1〜3個で1ライン以上消せば成功。HOLD禁止。Comboは得点倍率のみ。ミス後も次の譜面へ進みます。
+        </p>
+        <div id="bigbangCards" class="cards"></div>
+        <p class="info" id="bigbangCatalog"></p>
+        <h3>BIG BANG RECORDS</h3>
+        <label
+          >記録の形式
+          <select id="bigbangRecordFormat"></select
+        ></label>
+        <p class="info" id="bigbangBest"></p>
+        <div id="bigbangHistory"></div>
+        <p class="info">
+          BIG BANGの記録は端末内に別保存します。従来の履歴JSONには含まれません。
+        </p>
+      </section>
       <section id="tower" class="screen" hidden>
         <button class="back quiet" data-page="modes">← 基本モード</button>
         <div class="eyebrow">FIFTY FLOORS / ONE CLIMBER</div>
@@ -164,6 +184,7 @@
             <option value="custom">CUSTOM</option>
           </select></label
         >
+        <button class="quiet" data-page="bigbang">BIG BANG RECORDS →</button>
         <div id="recordGrid" class="records"></div>
         <h3>PLAY HISTORY</h3>
         <div class="table-wrap">
@@ -216,7 +237,8 @@
           <dt>04 — モード</dt>
           <dd>
             MARATHONは150ライン、SPRINTは40ライン、ULTRAは180秒。ENDLESSは5ラインごとに加速し固定猶予も短縮。TETRI
-            TOWERは全50階。CUSTOMはフリー・回転・全消し練習とカスタムルール。
+            TOWERは全50階。BIG
+            BANGは固定パズルの連続スコアアタック（HOLD禁止）。CUSTOMはフリー・回転・全消し練習とカスタムルール。
           </dd>
           <dt>05 — ボーナスと暫定仕様</dt>
           <dd>
@@ -224,7 +246,7 @@
             Clear。通常100/300/500/800×Level、T-Spin 400/800/1200/1600、Mini
             100/200/400。PC 800/1200/1800/2000を加算。Lock
             500ms（EndlessはLv6以降段階的に短縮）・最大15リセット、ARE
-            120ms・ライン消去は合計220ms。これらは公式未確認の暫定値です。
+            120ms・追加ライン消去待機0ms。これらは公式未確認の暫定値です。
           </dd>
           <dt>06 — 保存</dt>
           <dd>
@@ -233,6 +255,10 @@
         </dl>
       </section>
       <section id="game" hidden>
+        <div id="bigbangHud" class="tower-hud" hidden>
+          <strong id="bigbangStatus"></strong><span id="bigbangProgress"></span>
+          <small id="bigbangPieces"></small>
+        </div>
         <div id="towerHud" class="tower-hud" hidden>
           <strong id="towerFloor"></strong><span id="towerMission"></span>
           <div id="towerProgress" role="status"></div>
@@ -244,7 +270,7 @@
         <div class="arena">
           <aside class="side">
             <button class="panel hold" id="holdBtn">
-              <span class="panel-label">HOLD</span
+              <span class="panel-label" id="holdLabel">HOLD</span
               ><canvas id="hold" class="mini" aria-label="HOLDミノ"></canvas>
             </button>
             <div class="panel">
@@ -257,7 +283,7 @@
               <div class="stat">
                 <span>LINES</span><strong id="lines">0</strong>
               </div>
-              <div class="stat">
+              <div class="stat" id="levelStat">
                 <span>LEVEL</span><strong id="level">1</strong>
               </div>
             </div>
@@ -275,7 +301,7 @@
           </div>
           <aside class="side">
             <div class="panel next">
-              <div class="panel-label">NEXT / 5</div>
+              <div class="panel-label" id="nextLabel">NEXT / 5</div>
               <canvas id="next0" class="mini"></canvas
               ><canvas id="next1" class="mini"></canvas
               ><canvas id="next2" class="mini"></canvas
@@ -320,6 +346,10 @@
           ><button id="restart">RESTART</button
           ><button id="inGameSettings">SETTINGS</button
           ><button id="quit">MAIN MENU</button>
+        </div>
+        <div class="menu" id="quitMenu" hidden>
+          <button id="cancelQuit" class="primary">キャンセル</button>
+          <button id="confirmQuit" class="danger">終了する</button>
         </div>
         <div class="menu" id="resultMenu" hidden>
           <button class="primary" id="retry">RETRY</button
