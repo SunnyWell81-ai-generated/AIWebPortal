@@ -63,6 +63,15 @@
       "thumbnail": "default-thumbnail.svg",
       "url": "sites/CHROMIX/index.html",
       "registeredAt": "2026-10-30T11:13:50.000Z"
+    },
+    {
+      "id": "Mahjong",
+      "title": "Mahjong",
+      "description": "",
+      "category": "ゲーム",
+      "thumbnail": "default-thumbnail.svg",
+      "url": "sites/Mahjong/index.html",
+      "registeredAt": "2026-11-18T11:13:50.000Z"
     }
   ]
 }
