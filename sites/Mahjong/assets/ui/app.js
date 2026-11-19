@@ -15,7 +15,11 @@ import { Sound } from './audio.js';
 import { escapeHtml as e, icon, modal, selectOptions, toast } from './dom.js';
 import { helpView, homeView, resultView, ruleForm, settingsView, setupView, statsView } from './pages.js';
 import { tableView } from './table.js';
-import { kindTile, tileHtml } from './tiles.js';
+import { kindTile } from './tiles.js';
+import { assignCpuNames } from '../core/names.js';
+import { rankingView } from './ranking.js';
+import { upgradeEndRules } from '../core/round.js';
+import { choicesView } from './choices.js';
 export class App {
     root = document.querySelector('#app');
     dialog = document.querySelector('#modal');
@@ -51,6 +55,7 @@ export class App {
     helpFilter = 'all';
     helpQuery = '';
     ruleDraft = null;
+    choiceSession = null;
     lastResult = -1;
     dragged = null;
     pointer = null;
@@ -117,7 +122,7 @@ export class App {
         if (this.route === 'stats')
             content = statsView(this.stats, this.statsFilter);
         if (this.route === 'game' && this.state)
-            content = tableView(this.state, this.settings, { focus: this.actualFocus(), selected: this.selected, choices: this.state.players[this.actualFocus()].config.human ? this.choices() : [], paused: this.paused, thinking: this.thinking, order: this.order });
+            content = tableView(this.state, this.settings, { focus: this.actualFocus(), selected: this.selected, choices: this.state.players[this.actualFocus()].config.human ? this.choices() : [], paused: this.paused, thinking: this.thinking, order: this.order, highlightedIds: this.choiceSession?.choices[this.choiceSession.selected].action.tiles });
         if (this.route === 'replay')
             content = this.replayView();
         this.root.innerHTML = this.shell(content);
@@ -144,6 +149,7 @@ export class App {
                 this.draft.seats[0].human = true;
                 this.draft.seats[0].name = 'あなた';
             }
+            this.draft.seats = assignCpuNames(this.draft.seats, Math.random, true);
             this.route = 'setup';
         }
         else if (where === 'continue') {
@@ -154,6 +160,11 @@ export class App {
             this.stop();
             this.state = structuredClone(this.resume.state);
             this.recorder = new Recorder(this.state, this.resume);
+            if (this.state.endRuleVersion !== 2) {
+                this.state = upgradeEndRules(this.state);
+                this.recorder.add('upgradeEndRules');
+                await this.persist();
+            }
             this.order = [...(this.resume.handOrder ?? [])];
             this.route = 'game';
             this.paused = false;
@@ -205,7 +216,7 @@ export class App {
         this.draft.players = n;
         this.draft.rules = preset(n);
         while (this.draft.seats.length < n)
-            this.draft.seats.push({ name: '楓', human: false, level: 2, personality: 'balanced' });
+            this.draft.seats.push({ name: '田中', human: false, level: 2, personality: 'balanced' });
         this.draft.seats = this.draft.seats.slice(0, n);
         this.draft.seats.forEach((s, i) => s.human = !this.spectate && i === Math.min(human, n - 1));
         this.saveDraft();
@@ -226,6 +237,7 @@ export class App {
             this.order = [];
             this.selected = null;
             this.render();
+            window.scrollTo({ top: 0, behavior: 'instant' });
             await this.persist();
             this.animations.announce('対局開始', this.settings);
             this.pump();
@@ -306,7 +318,7 @@ export class App {
             this.pump();
     }
     pump() {
-        if (this.timer || this.thinking !== null || this.processing || this.paused || this.route !== 'game' || !this.state)
+        if (this.timer || this.thinking !== null || this.choiceSession !== null || this.processing || this.paused || this.route !== 'game' || !this.state)
             return;
         const s = this.state;
         if (s.phase === 'handEnd' || s.phase === 'matchEnd') {
@@ -366,16 +378,44 @@ export class App {
         const candidates = this.choices().filter(c => c.action.type === type);
         if (!candidates.length)
             return;
-        if (candidates.length === 1) {
-            if (this.confirmAction(candidates[0].action))
-                void this.perform(candidates[0].action);
+        if (type === 'pass') {
+            void this.perform(candidates[0].action);
             return;
         }
-        const d = modal(type === 'riichi' ? 'リーチ宣言牌を選択' : '組み合わせを選択', `<div class="choice-list">${candidates.map((c, i) => `<button data-choice="${i}">${c.action.tiles?.map(id => tileHtml(this.state.players[this.actualFocus()].hand.find(t => t.id === id), { small: true })).join('')}<span>${c.label}</span></button>`).join('')}</div>`);
-        d.querySelectorAll('[data-choice]').forEach(b => b.addEventListener('click', () => { const action = candidates[Number(b.dataset.choice)].action; if (this.confirmAction(action)) {
-            d.close();
-            void this.perform(action);
-        } }));
+        this.stop();
+        this.choiceSession = { choices: candidates, selected: 0, number: this.state.actionNumber };
+        this.render();
+        this.showChoices();
+    }
+    showChoices() {
+        if (!this.state || !this.choiceSession)
+            return;
+        const session = this.choiceSession;
+        modal(session.choices[0].action.type === 'riichi' ? 'リーチ宣言牌と待ちを比較' : '操作する牌を確認', choicesView(this.state, session.choices, session.selected, this.settings.assistance.waits), true);
+    }
+    closeChoices() { this.choiceSession = null; this.dialog.close(); this.render(); this.pump(); }
+    chooseCandidate(index) {
+        if (!this.choiceSession || !this.choiceSession.choices[index])
+            return;
+        this.choiceSession.selected = index;
+        this.render();
+        this.showChoices();
+    }
+    confirmChoice(pass = false) {
+        const session = this.choiceSession;
+        if (!session || !this.state)
+            return;
+        if (session.number !== this.state.actionNumber) {
+            this.closeChoices();
+            toast('局面が変わったため、操作を選び直してください');
+            return;
+        }
+        const action = pass ? this.choices().find(c => c.action.type === 'pass')?.action : session.choices[session.selected].action;
+        if (!action || !this.confirmAction(action))
+            return;
+        this.choiceSession = null;
+        this.dialog.close();
+        void this.perform(action);
     }
     tileClick(id, force = false) {
         if (this.reordered) {
@@ -413,7 +453,7 @@ export class App {
             return '<main class="page"><p>牌譜がありません。</p></main>';
         const s = player.state, event = player.replay.events[player.position - 1], decision = this.replayDecision ?? event?.decision;
         const o = observe(s, this.replayFocus), p = s.players[this.replayFocus], eff = analyzeHand(p.hand, p.melds, o.visible.map(n => Math.max(0, 4 - n)), o.available);
-        return `<div class="replay-controls"><button data-replay="start" aria-label="最初へ">|◀</button><button data-replay="back" aria-label="一手戻る">◀</button><button class="primary" data-replay="play">${icon(this.replayPlaying ? 'pause' : 'play')}${this.replayPlaying ? '停止' : '再生'}</button><button data-replay="next" aria-label="一手進む">▶</button><button data-replay="end" aria-label="最後へ">▶|</button><input type="range" min="0" max="${player.replay.events.length}" value="${player.position}" data-replay-position aria-label="局面移動"><span>${player.position} / ${player.replay.events.length}</span><select data-replay-speed aria-label="再生速度">${selectOptions([['0.5', '0.5×'], ['1', '1×'], ['2', '2×'], ['4', '4×'], ['8', '8×']], this.replaySpeed)}</select><label><input type="checkbox" data-reveal ${this.reveal ? 'checked' : ''}>全手牌</label><select data-replay-focus aria-label="視点">${selectOptions(s.players.map(p => [String(p.seat), p.config.name]), this.replayFocus)}</select></div>${this.replayError ? `<p class="error-box">${e(this.replayError)}</p>` : ''}${tableView(s, this.settings, { focus: this.replayFocus, selected: null, choices: [], paused: false, thinking: null, replay: true, reveal: this.reveal, decision })}<section class="replay-analysis page"><div class="stats-grid"><div class="panel"><h2>局面分析</h2><p>${e(p.config.name)} · ${handShanten(p.hand, p.melds)}向聴 · 受け入れ${eff.count}枚</p><div class="mini-tiles">${eff.kinds.map(kindTile).join('')}</div><p class="subtle">14枚形の受け入れは最良候補を打牌した後の値です。</p><button data-ui="analyze">この局面の合法手を分析</button>${this.reveal ? `<details><summary>全員のシャンテン</summary>${s.players.map(q => `<p>${e(q.config.name)}：${handShanten(q.hand, q.melds)}向聴</p>`).join('')}</details>` : ''}${decision ? `<p>${e(decision.explanation)}</p><small>思考 ${Math.round(decision.elapsed)}ms</small><div class="table-scroll"><table><thead><tr><th>候補</th><th>評価</th><th>向聴</th><th>受入</th><th>危険</th><th>推定和了</th></tr></thead><tbody>${decision.candidates.slice(0, 12).map(c => `<tr><td>${e(c.action.type)} ${c.action.tiles?.map(id => kindName(Math.floor(id / 4))).join(' ') ?? ''}</td><td>${c.score.toFixed(1)}</td><td>${c.shanten}</td><td>${c.ukeire}</td><td>${(c.risk * 100).toFixed(1)}%</td><td>${(c.winProbability * 100).toFixed(1)}%</td></tr>`).join('')}</tbody></table></div>` : '<p class="subtle">CPUの行動直後に判断内容を表示します。</p>'}</div><div class="panel"><h2>打牌・鳴き・和了履歴</h2><select data-replay-hand aria-label="局の先頭へ"><option value="0">東1局（開始）</option>${player.replay.events.filter(ev => ev.action === 'next').map(ev => `<option value="${ev.index + 1}">次局 / 手数${ev.index + 1}</option>`).join('')}</select><div class="replay-history">${player.replay.events.slice(Math.max(0, player.position - 25), player.position).reverse().map(ev => `<button data-seek="${ev.index + 1}"><span>${ev.index + 1}</span>${ev.action === 'next' ? '次の局' : `${e(s.players[ev.action.player].config.name)} · ${e(ev.action.type)} ${ev.action.tiles?.map(id => kindName(Math.floor(id / 4))).join(' ') ?? ''}`}</button>`).join('')}</div></div></div></section>`;
+        return `<div class="replay-controls"><button data-replay="start" aria-label="最初へ">|◀</button><button data-replay="back" aria-label="一手戻る">◀</button><button class="primary" data-replay="play">${icon(this.replayPlaying ? 'pause' : 'play')}${this.replayPlaying ? '停止' : '再生'}</button><button data-replay="next" aria-label="一手進む">▶</button><button data-replay="end" aria-label="最後へ">▶|</button><input type="range" min="0" max="${player.replay.events.length}" value="${player.position}" data-replay-position aria-label="局面移動"><span>${player.position} / ${player.replay.events.length}</span><select data-replay-speed aria-label="再生速度">${selectOptions([['0.5', '0.5×'], ['1', '1×'], ['2', '2×'], ['4', '4×'], ['8', '8×']], this.replaySpeed)}</select><label><input type="checkbox" data-reveal ${this.reveal ? 'checked' : ''}>全手牌</label><select data-replay-focus aria-label="視点">${selectOptions(s.players.map(p => [String(p.seat), p.config.name]), this.replayFocus)}</select></div>${this.replayError ? `<p class="error-box">${e(this.replayError)}</p>` : ''}${tableView(s, this.settings, { focus: this.replayFocus, selected: null, choices: [], paused: false, thinking: null, replay: true, reveal: this.reveal, decision })}<section class="replay-analysis page"><div class="stats-grid"><div class="panel"><h2>局面分析</h2><p>${e(p.config.name)} · ${handShanten(p.hand, p.melds)}向聴 · 受け入れ${eff.count}枚</p><div class="mini-tiles">${eff.kinds.map(kindTile).join('')}</div><p class="subtle">14枚形の受け入れは最良候補を打牌した後の値です。</p><button data-ui="analyze">この局面の合法手を分析</button>${this.reveal ? `<details><summary>全員のシャンテン</summary>${s.players.map(q => `<p>${e(q.config.name)}：${handShanten(q.hand, q.melds)}向聴</p>`).join('')}</details>` : ''}${decision ? `<p>${e(decision.explanation)}</p><small>思考 ${Math.round(decision.elapsed)}ms</small><div class="table-scroll"><table><thead><tr><th>候補</th><th>評価</th><th>向聴</th><th>受入</th><th>危険</th><th>推定和了</th></tr></thead><tbody>${decision.candidates.slice(0, 12).map(c => `<tr><td>${e(c.action.type)} ${c.action.tiles?.map(id => kindName(Math.floor(id / 4))).join(' ') ?? ''}</td><td>${c.score.toFixed(1)}</td><td>${c.shanten}</td><td>${c.ukeire}</td><td>${(c.risk * 100).toFixed(1)}%</td><td>${(c.winProbability * 100).toFixed(1)}%</td></tr>`).join('')}</tbody></table></div>` : '<p class="subtle">CPUの行動直後に判断内容を表示します。</p>'}</div><div class="panel"><h2>打牌・鳴き・和了履歴</h2><select data-replay-hand aria-label="局の先頭へ"><option value="0">東1局（開始）</option>${player.replay.events.filter(ev => ev.action === 'next').map(ev => `<option value="${ev.index + 1}">次局 / 手数${ev.index + 1}</option>`).join('')}</select><div class="replay-history">${player.replay.events.slice(Math.max(0, player.position - 25), player.position).reverse().map(ev => `<button data-seek="${ev.index + 1}"><span>${ev.index + 1}</span>${ev.action === 'next' ? '次の局' : ev.action === 'upgradeEndRules' ? '終局ルールを更新' : `${e(s.players[ev.action.player].config.name)} · ${e(ev.action.type)} ${ev.action.tiles?.map(id => kindName(Math.floor(id / 4))).join(' ') ?? ''}`}</button>`).join('')}</div></div></div></section>`;
     }
     seek(position) { try {
         this.playback?.seek(position);
@@ -519,10 +559,21 @@ export class App {
             }
             return;
         }
+        if (action === 'rankings') {
+            const state = this.route === 'replay' ? this.playback?.state : this.state;
+            if (!state)
+                return;
+            if (this.route === 'game')
+                this.setPaused(true);
+            else
+                this.stopReplay();
+            modal('現在の順位', rankingView(state, this.route === 'replay' ? this.replayFocus : this.actualFocus()));
+            return;
+        }
         if (action === 'menu') {
             if (this.route === 'game')
                 this.setPaused(true);
-            modal('メニュー', `<div class="mobile-menu-list">${[['resume', '対局に戻る'], ['home', 'ホーム'], ['rules', '現在のルール'], ['help', '役・点数・操作'], ['settings', '設定']].map(([v, l]) => `<button data-ui="${v}">${l}</button>`).join('')}</div>`);
+            modal('メニュー', `<div class="mobile-menu-list">${[['resume', '対局に戻る'], ['home', 'ホーム'], ['rankings', '現在の順位'], ['rules', '現在のルール'], ['help', '役・点数・操作'], ['settings', '設定']].map(([v, l]) => `<button data-ui="${v}">${l}</button>`).join('')}</div>`);
             return;
         }
         if (action === 'analyze' && this.playback) {
@@ -558,6 +609,22 @@ export class App {
             const target = ev.target.closest('button,[data-route],[data-ui]');
             if (!target || target.hasAttribute('disabled'))
                 return;
+            if (target.dataset.candidate !== undefined) {
+                this.chooseCandidate(Number(target.dataset.candidate));
+                return;
+            }
+            if (target.hasAttribute('data-choice-cancel')) {
+                this.closeChoices();
+                return;
+            }
+            if (target.hasAttribute('data-choice-pass')) {
+                this.confirmChoice(true);
+                return;
+            }
+            if (target.hasAttribute('data-choice-confirm')) {
+                this.confirmChoice();
+                return;
+            }
             if (target.dataset.route) {
                 void this.navigate(target.dataset.route).catch(e => this.report(e));
                 return;
@@ -697,7 +764,7 @@ export class App {
                 this.draft.seats.forEach((s, i) => { s.human = i === Number(el.value); if (s.human)
                     s.name = 'あなた';
                 else if (s.name === 'あなた')
-                    s.name = ['凪', '蓮', '葵', '楓'][i]; });
+                    s.name = ['佐藤', '鈴木', '高橋', '田中'][i]; });
                 this.saveDraft();
                 this.render();
                 return;
@@ -800,6 +867,11 @@ export class App {
         this.root.addEventListener('pointerup', ev => { const p = this.pointer; this.pointer = null; if (!p || performance.now() - p.at < 280 || Math.abs(ev.clientX - p.x) < 12)
             return; const target = document.elementFromPoint(ev.clientX, ev.clientY)?.closest('button[data-tile]'); if (target) {
             this.reorder(p.id, Number(target.dataset.tile));
+        } });
+        this.dialog.addEventListener('close', () => { if (this.choiceSession) {
+            this.choiceSession = null;
+            this.render();
+            this.pump();
         } });
         this.dialog.addEventListener('cancel', ev => { if (this.route === 'game') {
             ev.preventDefault();

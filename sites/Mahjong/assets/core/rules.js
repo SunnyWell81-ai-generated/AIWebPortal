@@ -30,9 +30,9 @@ export const PERSONALITIES = { balanced: 'バランス', attack: '攻撃', defen
 export const DEFAULT_MATCH = {
     players: 4, format: 'east', seed: 0, rules: preset(4), seats: [
         { name: 'あなた', human: true, level: 2, personality: 'balanced' },
-        { name: '凪', human: false, level: 2, personality: 'balanced' },
-        { name: '蓮', human: false, level: 3, personality: 'defense' },
-        { name: '葵', human: false, level: 2, personality: 'attack' },
+        { name: '佐藤', human: false, level: 2, personality: 'balanced' },
+        { name: '鈴木', human: false, level: 3, personality: 'defense' },
+        { name: '高橋', human: false, level: 2, personality: 'attack' },
     ],
 };
 export function defaultSettings() {

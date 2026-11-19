@@ -1,4 +1,7 @@
 import { advanceRound, applyAction } from '../core/engine.js';
+import { upgradeEndRules } from '../core/round.js';
+export function historyInitial(initial) { const state = structuredClone(initial); state.endRuleVersion ??= 1; return state; }
+export function applyLogAction(state, action) { return action === 'next' ? advanceRound(state) : action === 'upgradeEndRules' ? upgradeEndRules(state) : applyAction(state, action); }
 export class Recorder {
     initial;
     events;
@@ -14,7 +17,7 @@ export class ReplayPlayer {
     position = 0;
     constructor(replay) {
         this.replay = replay;
-        this.state = structuredClone(replay.initial);
+        this.state = historyInitial(replay.initial);
         this.checkpoints.set(0, structuredClone(this.state));
     }
     seek(position) {
@@ -25,7 +28,7 @@ export class ReplayPlayer {
         }
         while (this.position < target) {
             const event = this.replay.events[this.position];
-            this.state = event.action === 'next' ? advanceRound(this.state) : applyAction(this.state, event.action);
+            this.state = applyLogAction(this.state, event.action);
             this.position++;
             if (this.position % 30 === 0 || event.action === 'next')
                 this.checkpoints.set(this.position, structuredClone(this.state));

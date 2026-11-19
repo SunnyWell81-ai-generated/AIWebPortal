@@ -2,8 +2,9 @@ import { counts, isOutside, kindsInUse, sortTiles } from './tiles.js';
 import { createWall, drawLive, drawRinshan } from './wall.js';
 import { isClosed, shapes, waits } from './hand.js';
 import { contextFor, evaluateWin, notenPayments, winPayments } from './scoring.js';
-import { recordResult } from './round.js';
+import { bankruptPlayers, recordResult } from './round.js';
 import { validateConfig } from './rules.js';
+import { assignCpuNames } from './names.js';
 export class IllegalActionError extends Error {
 }
 const next = (s, i) => (i + 1) % s.players.length;
@@ -14,9 +15,10 @@ function freshPlayer(seat, c, score) {
 export function newGame(config) {
     validateConfig(config);
     const c = structuredClone(config);
+    c.seats = assignCpuNames(c.seats);
     if (!c.seed)
         c.seed = crypto.getRandomValues(new Uint32Array(1))[0] || 1;
-    const s = { version: 1, id: crypto.randomUUID(), config: c, players: c.seats.map((_, i) => freshPlayer(i, c)), wall: createWall(c.players, c.rules, c.seed), round: 0, dealer: 0, initialDealer: 0, honba: 0, deposits: 0, current: 0, phase: 'discard', reaction: null, forbidden: [], interrupted: false, firstCycle: true, lastDraw: 'live', kanCount: 0, kanOwners: [], delayedKanDora: false, result: null, records: [], actionNumber: 0, seed: c.seed, message: '東一局', startedAt: new Date().toISOString() };
+    const s = { version: 1, endRuleVersion: 2, id: crypto.randomUUID(), config: c, players: c.seats.map((_, i) => freshPlayer(i, c)), wall: createWall(c.players, c.rules, c.seed), round: 0, dealer: 0, initialDealer: 0, honba: 0, deposits: 0, current: 0, phase: 'discard', reaction: null, forbidden: [], interrupted: false, firstCycle: true, lastDraw: 'live', kanCount: 0, kanOwners: [], delayedKanDora: false, result: null, records: [], actionNumber: 0, seed: c.seed, message: '東一局', startedAt: new Date().toISOString() };
     deal(s);
     return s;
 }
@@ -317,6 +319,10 @@ function resolveReactions(s) {
         return;
     }
     establishRiichi(s, re);
+    if (s.endRuleVersion !== 1 && bankruptPlayers(s).length) {
+        recordResult(s, { reason: 'トビ終了（リーチ供託）', winners: [], evaluations: {}, delta: Array(s.players.length).fill(0), tenpai: [], dealerRepeat: false, abortive: true });
+        return;
+    }
     if (s.config.rules.fourKans && s.kanCount === 4 && new Set(s.kanOwners).size > 1) {
         endDraw(s, '四開槓', true);
         return;
@@ -408,6 +414,12 @@ export function applyAction(state, action) {
 /** Normal clients see the public observation, never wall/dead-wall/other concealed hands. */
 export function publicTileCounts(s, who) {
     const all = [...s.players[who].hand, ...s.players.flatMap(p => p.river.filter(d => !d.called).map(d => d.tile)), ...s.players.flatMap(p => p.melds.flatMap(m => m.tiles)), ...s.players.flatMap(p => p.nuki)];
+    if (s.reaction && s.reaction.source !== who && s.reaction.kind !== 'discard') {
+        const re = s.reaction;
+        for (const id of re.kind === 'ankan' ? (re.kanTiles ?? [re.tile.id]) : [re.tile.id])
+            if (!all.some(t => t.id === id))
+                all.push({ id, kind: Math.floor(id / 4), red: false });
+    }
     all.push(...Array.from({ length: s.wall.doraCount }, (_, i) => s.wall.dead[4 + i * 2]));
     return counts(all);
 }

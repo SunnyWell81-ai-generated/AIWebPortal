@@ -11,3 +11,111 @@
 @media(max-height:650px) and (orientation:landscape) and (max-width:1000px){.app-header{height:49px;padding:0 20px}.brand-mark{width:27px;height:31px;font-size:20px}.brand>span:last-child{font-size:13px}.brand small{font-size:6px}.desktop-nav{display:none}.mobile-menu{display:inline-flex}.match-layout{max-width:none;padding:6px 14px 10px;display:grid;grid-template-columns:1fr}.game-area{display:grid;grid-template-columns:minmax(300px,1.2fr) minmax(270px,1fr);grid-template-rows:25px 1fr;gap:0 18px}.table-toolbar{grid-column:1/-1;margin:0;height:25px;min-height:25px}.mahjong-table{grid-column:1;aspect-ratio:auto;height:calc(100dvh - 92px);min-height:235px;max-height:470px;border-width:5px}.hand-panel{grid-column:2;display:flex;flex-direction:column;justify-content:center;align-self:center;min-width:0;padding:5px 0}.your-hand{flex-wrap:wrap;justify-content:center;gap:3px;min-height:70px;padding:15px 4px 5px}.your-hand .tile{--tile-w:calc((100vw - 425px) / 10);max-width:35px;min-width:24px}.your-hand .tile.drawn{margin-left:8px}.hand-caption{flex-wrap:wrap;gap:8px;margin:0 2px}.hand-hint{order:4;max-width:none;flex-basis:100%;text-align:left;font-size:9px;margin-left:0}.hand-caption .icon-button{margin-left:auto}.action-bar{justify-content:center;margin-top:8px;gap:6px}.action-button{padding:7px 13px;min-height:38px}.assist-line{flex-wrap:wrap}.center-board{width:103px;height:101px;padding:3px}.round-label{font-size:19px}.center-meta{font-size:6px;gap:7px}.remaining-label{font-size:6px}.remaining-label strong{font-size:11px}.dora-label{font-size:5px;margin-bottom:1px}.dora-tiles .tile{--tile-w:13px}.wind-badge{width:17px;height:17px;font-size:9px}.wind-bottom{bottom:-19px}.wind-top{top:-19px}.wind-left{left:-19px}.wind-right{right:-19px}.river .tile{--tile-w:13px}.river{gap:2px}.river-bottom{top:72%}.river-top{bottom:72%}.river-right{left:71%}.river-left{right:71%}.opponent-top{top:4px}.opponent-caption{font-size:7px}.opponent-caption>span{font-size:6px}.opponent{gap:3px}.opponent-hand .tile{--tile-w:12px}.opponent-right{right:-119px}.opponent-left{left:-119px}.meld .tile{--tile-w:12px}.melds-bottom{bottom:7px;right:10px}.melds-top{top:43px;left:8px}.melds-right{right:19px;bottom:42px}.melds-left{left:19px;top:42px}.match-sidebar{display:none}.table-announcement{font-size:26px}.replay-controls{padding:6px 14px;gap:6px}.replay-controls+ .match-layout .mahjong-table{height:calc(100dvh - 150px)}.replay-controls~.match-layout .mahjong-table{min-height:220px}.hero{min-height:300px}.hero-art{height:260px}.hero h1{font-size:34px}.home-bottom{padding-top:20px}}
 @media(prefers-reduced-motion:reduce){*{animation-duration:.001ms!important;transition:none!important}}
 .result-chart{width:100%;height:170px}.result-player-stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:25px}.result-player-stats p{font-size:11px;padding-left:10px;margin:0}.result-player-stats strong{display:block}.result-player-stats span{display:block;color:var(--muted);font-size:10px}.result-player-stats small{font-size:9px;color:var(--muted)}.discard-selected{margin-right:auto}
+/* Visibility and action review, shared by both tile styles and all themes. */
+:root{--tile-w:47px}
+.tile .man-number,.tile .man-letter{font-size:32px}
+.tile .honor-letter{font-size:52px}
+.game-area{container-type:inline-size;container-name:game}
+.hand-panel{container-type:inline-size;container-name:hand;min-width:0}
+.your-hand{gap:3px;padding-inline:0;justify-content:center}
+.your-hand .tile{--tile-w:clamp(18px,calc((100cqw - 51px)/14),52px);max-width:none;min-width:0}
+.your-hand .tile.drawn{margin-left:12px}
+.river .tile{--tile-w:clamp(21px,3.8cqw,28px)}
+.opponent-hand .tile{--tile-w:clamp(17px,2.8cqw,23px)}
+.meld .tile{--tile-w:clamp(18px,2.95cqw,24px)}
+.dora-tiles .tile{--tile-w:clamp(18px,2.65cqw,21px)}
+.dora-tiles{gap:3px}
+.opponent-caption{font-size:13px;line-height:1.7}
+.opponent-caption>span:not(.rank-badge){font-size:12px;margin-left:5px}
+.rank-badge{display:inline-flex;align-items:center;justify-content:center;flex:none;border:1px solid currentColor;border-radius:5px;font-size:14px;font-weight:700;line-height:1.5;padding:1px 6px;white-space:nowrap;font-variant-numeric:tabular-nums}
+.rank-1{color:var(--gold);border-style:double;border-width:3px;padding:0 5px}
+.rank-2{color:var(--accent)}
+.rank-3{color:var(--muted)}
+.rank-4{color:#bc766c}
+.mahjong-table .rank-1{color:#f0dc9d}.mahjong-table .rank-2{color:#daebde}.mahjong-table .rank-3{color:#b9d1c7}.mahjong-table .rank-4{color:#e8b5a6}
+.your-rank{background:var(--accent-soft)}
+.hand-caption{flex-wrap:wrap;row-gap:6px}
+.hand-caption strong{max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.score-row{flex-wrap:wrap;gap:8px}
+.score-row .leader-gap{display:block;flex-basis:100%;padding-left:48px}
+.leader-gap{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+.score-row strong{font-size:14px}.score-row small{font-size:12px}
+.rank-badge.your-rank{outline:2px solid var(--accent);outline-offset:2px}
+.ranking-item{display:grid;grid-template-columns:auto 1fr auto;gap:8px 14px;align-items:center;border-bottom:1px solid var(--line);padding:16px 8px;font-size:14px}
+.ranking-item.is-you{background:var(--accent-soft);border-radius:8px}
+.ranking-item strong small{margin-left:8px;color:var(--accent);font-size:12px}
+.ranking-item .leader-gap{grid-column:2/-1}
+.mobile-assist{display:none}
+.table-toolbar .text-button+ .text-button{margin-left:8px}
+.tile.call-target,.tile.winning-tile{outline:3px double var(--gold);outline-offset:2px;z-index:5;filter:none}
+.tile.call-used{outline:2px dashed var(--accent);outline-offset:2px;background:#f5f1d9;z-index:3}
+.tile-marker{position:absolute;top:-15px;left:50%;transform:translateX(-50%);background:var(--text);color:var(--bg);font-size:9px;font-weight:600;line-height:1.4;padding:1px 3px;white-space:nowrap;border-radius:3px;pointer-events:none;z-index:6}
+.mahjong-table .tile-marker{background:#ede7cf;color:#213a2c}
+.tile.call-target:before,.tile.winning-tile:before{content:'';position:absolute;left:-5px;right:-5px;bottom:-7px;border-bottom:2px solid var(--gold)}
+.wait-report{border:1px solid var(--line);border-radius:10px;background:var(--surface);padding:12px 14px;margin:10px 0;display:block;text-align:left;max-width:100%}
+.wait-heading{display:flex;flex-wrap:wrap;align-items:center;gap:7px 14px;font-size:14px;line-height:1.7}
+.wait-heading>span{color:var(--muted);margin-left:auto;font-size:13px;white-space:nowrap}
+.wait-heading>span b{color:var(--accent);font-size:15px}
+.wait-tiles{display:flex;flex-wrap:wrap;gap:9px;margin:10px 0 4px}
+.wait-tile{display:grid;grid-template-columns:auto auto;align-items:center;column-gap:8px;row-gap:4px;border:1px solid var(--line);border-radius:7px;padding:9px;background:var(--surface-soft);font-size:14px;min-width:87px}
+.wait-tile>.tile{--tile-w:29px;grid-row:1/3;box-shadow:0 2px 0 var(--tile-side)}
+.wait-tile>small{font-size:11px;color:var(--muted);line-height:1.5;max-width:100px}
+.wait-tile.exhausted{border-style:dashed;opacity:.7}
+.wait-tile.exhausted>b{text-decoration:line-through}
+.wait-explanation{font-size:12px;line-height:1.85;color:var(--muted);margin:10px 0 0}
+.wait-warning{font-size:12px;color:var(--ink-red);margin:8px 0 0;line-height:1.8}
+.furiten-badge{font-size:12px;color:var(--ink-red);border:1px dashed currentColor;border-radius:4px;padding:2px 6px}
+.compact-waits{margin:6px 0 0;padding:10px;background:var(--surface-soft);width:100%}
+.compact-waits .wait-heading{font-size:12px;gap:4px}
+.compact-waits .wait-heading>span{font-size:12px}.compact-waits .wait-heading>span b{font-size:14px}
+.compact-waits .wait-tile{padding:6px;min-width:76px;background:var(--surface)}
+.compact-waits .wait-tile>.tile{--tile-w:25px}
+.choice-instruction{font-size:14px;line-height:1.9;color:var(--muted)}
+.choice-target{display:flex;align-items:center;gap:20px;padding:24px 16px 15px;background:var(--surface-soft);border-radius:10px;margin-bottom:18px;flex-wrap:wrap}
+.choice-target>.tile{--tile-w:46px}.choice-target>span:not(.tile){font-size:14px;color:var(--muted)}
+.choice-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(280px,100%),1fr));gap:14px;margin:16px 0}
+.choice-card{display:flex;flex-direction:column;align-items:stretch;justify-content:flex-start;text-align:left;padding:15px;border:2px solid var(--line);min-width:0;gap:10px;max-width:100%}
+.choice-card.is-selected{border:3px double var(--accent);background:var(--accent-soft);padding:14px}
+.choice-card-head{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:14px}
+.choice-card-head>span{font-size:12px;color:var(--muted);white-space:nowrap}
+.choice-tile-group{display:flex;gap:4px;align-items:flex-end;flex-wrap:wrap;padding:19px 3px 6px;min-height:75px}
+.choice-tile-group>.tile{--tile-w:37px}
+.choice-hand-preview{margin:20px 0;padding:16px;background:var(--surface-soft);border-radius:10px;font-size:14px}
+.choice-hand-preview>div{display:flex;flex-wrap:wrap;gap:4px;padding-top:24px}
+.choice-hand-preview .tile{--tile-w:32px}
+.choice-hand-preview .tile:not(.call-used):not(.winning-tile){opacity:.55}
+.choice-footer{position:sticky;bottom:-24px;display:flex;justify-content:flex-end;gap:9px;flex-wrap:wrap;padding:15px 0 5px;background:var(--surface);border-top:1px solid var(--line);z-index:8}
+.choice-footer button{font-size:14px;min-height:44px}
+.yaku-open-info{color:var(--accent)!important;font-size:12px!important}
+.yaku-example{border-top:1px solid var(--line);margin-top:12px;padding-top:10px}
+.yaku-example summary{font-size:13px;cursor:pointer;color:var(--accent);min-height:30px}
+.hand-diagram{display:flex;flex-wrap:wrap;align-items:center;gap:8px;max-width:100%;margin:10px 0 5px}
+.diagram-group{display:inline-flex;flex-wrap:wrap;gap:2px;align-items:center;max-width:100%}
+.hand-diagram .tile{--tile-w:clamp(20px,2.3vw,27px)}
+.yaku-item .hand-diagram .tile{--tile-w:21px}
+.yaku-item{min-width:0}.yaku-item h3{font-size:16px}.yaku-item>p{font-size:13px}.yaku-item>div>span{font-size:12px}
+.yaku-example p{font-size:12px;line-height:1.8}
+.guide-diagrams{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(245px,100%),1fr));gap:13px;margin:18px 0}
+.guide-diagrams figure,.north-diagram{border:1px solid var(--line);border-radius:8px;background:var(--surface-soft);padding:16px;margin:0;min-width:0}
+.guide-diagrams figcaption,.north-diagram figcaption{font-size:14px;font-weight:600}
+.guide-diagrams p,.north-diagram p{font-size:12px!important;line-height:1.9;margin:10px 0 0;color:var(--muted)}
+.diagram-flow{display:flex;flex-wrap:wrap;align-items:center;gap:12px;font-size:12px;color:var(--muted);margin-top:12px}
+.nuki-example{border:1px dashed var(--accent);padding:10px;display:flex;align-items:center;gap:12px;border-radius:7px}
+.nuki-example small{font-size:12px}.north-diagram{margin:15px 0}.north-diagram .tile{--tile-w:30px}
+@media(max-width:1100px) and (min-width:801px){.opponent-caption{font-size:11px}.opponent-caption>span:not(.rank-badge){font-size:11px}.river .tile{--tile-w:clamp(21px,3.8cqw,26px)}.center-board{width:164px;height:140px}.score-row strong{max-width:74px}}
+@media(max-width:800px){.mobile-assist{display:inline-flex}.table-toolbar{flex-wrap:wrap;font-size:12px}.table-toolbar .text-button{font-size:12px}.table-format{font-size:11px}.opponent-caption .rank-badge{font-size:12px}.hand-hint{font-size:12px}.hand-caption strong{font-size:13px}.your-score{font-size:22px}.wait-report{padding:12px}.wait-heading{font-size:13px}}
+@media(max-width:600px){.game-area{min-width:0}.your-hand{gap:1px;justify-content:center}.your-hand .tile{--tile-w:clamp(17px,calc((100cqw - 19px)/14),40px)}.your-hand .tile.drawn{margin-left:6px}.river .tile{--tile-w:clamp(16px,5.3cqw,20px)}.opponent-hand .tile{--tile-w:clamp(14px,4.5cqw,18px)}.meld .tile{--tile-w:clamp(15px,4.6cqw,19px)}.dora-tiles .tile{--tile-w:17px}.center-board{width:126px;height:124px}.mahjong-table{min-height:375px}.opponent-right{right:-100px}.opponent-left{left:-100px}.opponent-caption{font-size:11px}.opponent-caption>span:not(.rank-badge){font-size:10px}.opponent-caption .rank-badge{font-size:11px;padding-inline:3px}.hand-caption{font-size:12px;gap:6px}.hand-hint{font-size:11px;max-width:none;order:5;flex-basis:calc(100% - 35px);text-align:left;margin-left:0}.hand-caption .icon-button{margin-left:auto}.your-score{font-size:20px}.your-rank{font-size:13px}.your-hand{min-height:64px}.table-toolbar{gap:4px 7px}.table-toolbar .text-button{min-height:34px}.table-toolbar .text-button+ .text-button{margin-left:4px}.wait-tile>.tile{--tile-w:27px}.wait-tile{min-width:80px;gap:4px 6px;padding:8px}.wait-tiles{gap:6px}.wait-heading>span{font-size:12px}.wait-explanation{font-size:12px}.choice-target{gap:13px}.choice-hand-preview .tile{--tile-w:26px}.choice-card{padding:12px}.choice-card.is-selected{padding:11px}.choice-footer{bottom:-18px}.choice-footer button{flex:1;padding:8px;font-size:12px}.choice-tile-group>.tile{--tile-w:32px}.ranking-item{font-size:13px;gap:8px}.leader-gap{font-size:12px}.ranking-item strong{min-width:0}.yaku-item .hand-diagram .tile{--tile-w:22px}.tile-marker{font-size:8px;top:-13px}.choice-tile-group>.tile .tile-marker,.choice-hand-preview .tile-marker{font-size:10px;top:-17px}.assist-line{font-size:12px;flex-wrap:wrap}.shanten-chip{font-size:12px}}
+@media(max-width:380px){.mahjong-table{min-height:360px}.center-board{width:112px;height:119px}.dora-tiles .tile{--tile-w:15px}.your-hand .tile{--tile-w:calc((100cqw - 19px)/14)}.table-toolbar .text-button{font-size:11px}.your-score{font-size:18px}.hand-caption strong{max-width:75px}.opponent-hand .tile{--tile-w:14px}}
+@media(max-height:650px) and (orientation:landscape) and (max-width:1000px){.mahjong-table{min-height:245px}.game-area{grid-template-rows:auto 1fr}.table-toolbar{height:auto;min-height:29px;flex-wrap:nowrap}.table-toolbar .text-button{font-size:11px;min-height:29px}.table-format{font-size:10px}.hand-panel{max-height:calc(100dvh - 90px);overflow-y:auto;padding:14px 5px 10px;align-self:start}.your-hand{flex-wrap:wrap;gap:3px;justify-content:center;padding:14px 0 5px}.your-hand .tile{--tile-w:clamp(25px,calc((100cqw - 26px)/7),44px)}.your-hand .tile.drawn{margin-left:6px}.hand-caption{gap:6px;font-size:12px}.hand-hint{font-size:11px;order:5;max-width:none;flex-basis:100%}.opponent-caption{font-size:9px}.opponent-caption>span:not(.rank-badge){font-size:9px}.opponent-caption .rank-badge{font-size:10px;padding-inline:3px}.opponent-right{right:-110px}.opponent-left{left:-110px}.opponent-hand .tile{--tile-w:clamp(12px,1.7cqw,15px)}.river .tile{--tile-w:clamp(14px,2cqw,17px)}.meld .tile{--tile-w:14px}.dora-tiles .tile{--tile-w:13px}.center-board{width:107px;height:106px}.wait-report{padding:9px;margin:8px 0}.wait-heading{font-size:12px}.wait-tile{padding:5px}.wait-tile>.tile{--tile-w:23px}.wait-explanation{font-size:11px}.wait-heading>span b{font-size:13px}.wait-tiles{gap:5px}.wait-tile small{font-size:10px}.action-button{min-height:42px}}
+:root{--warning:#9d392e}
+:root[data-theme=dark]{--warning:#f2ad98}
+@media(prefers-color-scheme:dark){:root[data-theme=system]{--warning:#f2ad98}}
+.wait-warning,.furiten-badge{color:var(--warning)}
+@media(max-width:600px){.mahjong-table{aspect-ratio:auto;width:100%;min-width:0;height:clamp(360px,110cqw,490px)}}
+@media(max-height:650px) and (orientation:landscape) and (max-width:1000px){.mahjong-table{height:calc(100dvh - 92px);min-height:245px;width:100%}}
+@media(max-height:650px) and (orientation:landscape) and (max-width:1000px){
+  .hand-panel{justify-content:flex-start;scrollbar-gutter:stable}
+  .hand-panel>*{flex-shrink:0}
+  .your-hand .tile{--tile-w:clamp(25px,calc((100cqw - 50px)/7),44px)}
+  .action-bar{position:sticky;bottom:0;z-index:8;background:var(--bg);padding-block:5px;border-top:1px solid var(--line)}
+}

@@ -5,7 +5,7 @@ export function addStats(stats, s) {
     if (who < 0 || s.phase !== 'matchEnd' || stats.entries.some(e => e.id === s.id))
         return stats;
     const p = s.players[who], levels = s.players.filter(p => !p.config.human).map(p => p.config.level).sort();
-    const e = { id: s.id, date: new Date().toISOString(), players: s.config.players, format: s.config.format, levels, levelSignature: levels.join('/'), rank: ranking(s).indexOf(who) + 1, score: p.score, point: finalPoints(s)[who], hands: s.records.length, wins: 0, dealIns: 0, calls: 0, riichi: 0, winPoints: 0, lossPoints: 0, tsumo: 0, ron: 0, draws: 0, tenpai: 0, yaku: {}, yakuman: 0 };
+    const e = { id: s.id, date: new Date().toISOString(), names: s.players.map(p => p.config.name), players: s.config.players, format: s.config.format, levels, levelSignature: levels.join('/'), rank: ranking(s).indexOf(who) + 1, score: p.score, point: finalPoints(s)[who], hands: s.records.length, wins: 0, dealIns: 0, calls: 0, riichi: 0, winPoints: 0, lossPoints: 0, tsumo: 0, ron: 0, draws: 0, tenpai: 0, yaku: {}, yakuman: 0 };
     for (const rec of s.records) {
         const r = rec.result;
         if (rec.riichi.includes(who))

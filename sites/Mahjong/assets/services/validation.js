@@ -1,6 +1,6 @@
 import { defaultSettings, validateConfig } from '../core/rules.js';
 import { createTiles } from '../core/tiles.js';
-import { advanceRound, applyAction } from '../core/engine.js';
+import { applyLogAction, historyInitial } from './replay.js';
 const object = (v) => typeof v === 'object' && v !== null && !Array.isArray(v);
 const finite = (v) => typeof v === 'number' && Number.isFinite(v);
 export function validateSettings(value) {
@@ -32,6 +32,8 @@ export function validateState(value) {
     if (!object(value) || value.version !== 1)
         throw new Error('非対応の局面バージョンです');
     const s = value;
+    if (s.endRuleVersion !== undefined && ![1, 2].includes(s.endRuleVersion))
+        throw new Error('終局ルールの版が不正です');
     validateConfig(s.config);
     const n = s.config.players;
     if (!Array.isArray(s.players) || s.players.length !== n || !['discard', 'reactions', 'handEnd', 'matchEnd'].includes(s.phase))
@@ -71,7 +73,8 @@ export function validateState(value) {
             throw new Error('面子の構成が不正です'); });
         if (p.drawnId !== null && !p.hand.some(t => t.id === p.drawnId))
             throw new Error('ツモ牌が手牌にありません');
-        const extra = p.drawnId !== null || s.phase === 'discard' && s.current === i;
+        const interruptedTurn = s.phase === 'matchEnd' && s.endReason === 'tobi' && s.result?.abortive && s.current === i && p.hand.length === 14 - p.melds.length * 3;
+        const extra = p.drawnId !== null || s.phase === 'discard' && s.current === i || interruptedTurn;
         if (p.hand.length !== 13 - p.melds.length * 3 + (extra ? 1 : 0))
             throw new Error('手牌と副露の枚数が一致しません');
         if (!Number.isInteger(p.turns) || p.turns < 0 || !Array.isArray(p.riichiWaits) || p.riichiWaits.some(k => !Number.isInteger(k) || k < 0 || k > 33))
@@ -105,7 +108,7 @@ function validEvents(events) {
     if (!Array.isArray(events) || events.length > 100000)
         throw new Error('牌譜イベント数が不正です');
     events.forEach((e, i) => { if (!object(e) || e.index !== i || !finite(e.at))
-        throw new Error('牌譜イベントが不正です'); const a = e.action; if (a !== 'next' && (!object(a) || !['discard', 'riichi', 'chi', 'pon', 'daiminkan', 'ankan', 'kakan', 'ron', 'tsumo', 'pass', 'nine', 'nuki'].includes(String(a.type)) || !Number.isInteger(a.player) || Number(a.player) < 0 || Number(a.player) > 3 || a.tiles !== undefined && (!Array.isArray(a.tiles) || a.tiles.some(t => !Number.isInteger(t) || t < 0 || t > 135))))
+        throw new Error('牌譜イベントが不正です'); const a = e.action; if (a !== 'next' && a !== 'upgradeEndRules' && (!object(a) || !['discard', 'riichi', 'chi', 'pon', 'daiminkan', 'ankan', 'kakan', 'ron', 'tsumo', 'pass', 'nine', 'nuki'].includes(String(a.type)) || !Number.isInteger(a.player) || Number(a.player) < 0 || Number(a.player) > 3 || a.tiles !== undefined && (!Array.isArray(a.tiles) || a.tiles.some(t => !Number.isInteger(t) || t < 0 || t > 135))))
         throw new Error('牌譜操作が不正です'); });
 }
 function validateResult(v, n) {
@@ -148,6 +151,8 @@ export function validateStats(v) {
     for (const e of v.entries) {
         if (!object(e) || typeof e.id !== 'string' || ids.has(e.id) || ![3, 4].includes(Number(e.players)) || !['single', 'east', 'south'].includes(String(e.format)) || !Array.isArray(e.levels) || !e.levels.every(l => [1, 2, 3, 4].includes(l)) || !object(e.yaku))
             throw new Error('成績の形式が不正です');
+        if (e.names !== undefined && (!Array.isArray(e.names) || e.names.length !== e.players || e.names.some(name => typeof name !== 'string' || name.length > 40)))
+            throw new Error('成績のプレイヤー名が不正です');
         ids.add(e.id);
         for (const k of ['rank', 'score', 'point', 'hands', 'wins', 'dealIns', 'calls', 'riichi', 'winPoints', 'lossPoints', 'tsumo', 'ron', 'draws', 'tenpai', 'yakuman'])
             if (!finite(e[k]) || Math.abs(Number(e[k])) > 1e12)
@@ -159,14 +164,16 @@ export function validateStats(v) {
 }
 /** JSONインポート時、保存する前に記録した操作列と最終状態の整合を確認する。 */
 export async function validateHistory(value) {
-    let state = structuredClone(value.initial);
+    let state = historyInitial(value.initial);
     for (let i = 0; i < value.events.length; i++) {
         const event = value.events[i];
-        state = event.action === 'next' ? advanceRound(state) : applyAction(state, event.action);
+        state = applyLogAction(state, event.action);
         if (i % 24 === 23)
             await new Promise(resolve => setTimeout(resolve, 0));
     }
     const expected = 'final' in value ? value.final : value.state;
+    if (expected.endRuleVersion === undefined && state.endRuleVersion === 1)
+        delete state.endRuleVersion;
     const canonical = (v) => {
         if (v === undefined)
             return 'null';
